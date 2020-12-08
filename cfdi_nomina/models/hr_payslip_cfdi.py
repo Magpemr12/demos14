@@ -55,7 +55,7 @@ class HrPayslip(models.Model):
     tipo_nomina = fields.Selection(CATALOGO_TIPONOMINA, string=u"Payroll type")
     registro_patronal_codigo = fields.Char(
         string='Employer Registration',
-        related='company_id.registro_patronal.name',
+        related='employee_id.registro_patronal.name',
         store=True, readonly=True)
     timbrada = fields.Boolean("Stamped", default=False, copy=False)
     fecha_local = fields.Datetime("Date and local time")

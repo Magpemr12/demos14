@@ -122,10 +122,10 @@ class HrSalaryRuleGroup(models.Model):
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule"
 
-    tipo_id = fields.Many2one("cfdi_nomina.tipo")
+    tipo_id = fields.Many2one("cfdi_nomina.tipo",string="Type")
     tipo_de_percepcion = fields.Selection([
         ('fijo', 'Fijo'),
-        ('variable', 'Variable')])
+        ('variable', 'Variable')],string="Type Of Perception",required=True)
 
     tipo_horas = fields.Many2one(
         "cfdi_nomina.tipo_horas", string="Type of overtime")
@@ -165,7 +165,7 @@ class HRSalaryRule(models.Model):
     acum_calendar_id = fields.Many2one('hr.calendar.acum', string='Calendar', required=False,
                                        help='Calendar for accumulated in payroll.')
     input_ids = fields.One2many(
-        'hr.rule.input', 'input_id', string='Inputs', copy=True)
+        'hr.rule.input', 'input_id', string='Inputs', copy=True,store=True)
 
     company_id = fields.Many2one('res.company',string="Company")
     policy_level = fields.Selection([
@@ -176,6 +176,15 @@ class HRSalaryRule(models.Model):
     tax_id = fields.Many2many('account.tax',string="Tax")
     payslip_id = fields.Many2one('hr.payslip',string="Payslip")
     total = fields.Float(string="Total")
+    x_studio_field_wtn56 = fields.Integer(string="New Campo relacionado",help="The sequence field is used to define order in which the tax lines are applied.")
+    parent_rule_id = fields.Many2one('hr.salary.rule',string="Parent Salary Rule",)
+    display_name = fields.Char(string="Display Name")
+    x_studio_field_wsgyf = fields.Integer(string="New Related Field",help="The sequence field is used to define order in which the tax lines are applied.")
+    account_tax_id = fields.Many2one('account.tax',string="Tax")
+    x_nivel_poliza = fields.Selection([
+        ('summary','Summary'),
+        ],string="Policy detail level")
+    child_ids = fields.One2many('hr.salary.rule','parent_rule_id',string="Child Salary Rule",store=True)
 
     @api.model
     def _set_global_values(self, localdict):

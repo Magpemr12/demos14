@@ -381,7 +381,7 @@ class HrMovNomina(models.TransientModel):
         if not tipo_ausencia:
             return False
 
-        holiday_obj = self.env['hr.leaves']
+        holiday_obj = self.env['hr.leave']
         # Falta desde los primeros 3 segundos del dia
         date_from = datetime.datetime(
             year=fecha.year, month=fecha.month, day=fecha.day) + datetime.timedelta(seconds=3)
@@ -399,7 +399,7 @@ class HrMovNomina(models.TransientModel):
         date_to -= tz_horas_diff
 
         # Verifica que no exista una ausencia previa
-        ausencia_ids = self.env['hr.leaves'].search([('employee_id', '=', employee.id),
+        ausencia_ids = self.env['hr.leave'].search([('employee_id', '=', employee.id),
                                                      ('date_from', '<=',
                                                       str(date_to)),
                                                      ('date_to', '>=',

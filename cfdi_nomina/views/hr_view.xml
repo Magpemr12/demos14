@@ -23,8 +23,15 @@
                         <field name="destajo"/>
                         <field name="acum_calendar_id" options="{'no_create_edit': True, 'no_create':True}"/>
                         <field name="policy_level"/>
+                        <field name="x_studio_field_wtn56"/>
+                        <field name="x_studio_field_wsgyf"/>
+                        <field name="x_nivel_poliza"/>
+                        <field name="account_tax_id"/>
                     </group>
                 </group>
+            </xpath>
+            <xpath expr="//form//sheet//field[@name='appears_on_payslip']" position="after">
+                <field name="display_name"/>
             </xpath>
             <xpath expr="//notebook/page[@name='description']" position="after">
                 <page string="Inputs">
