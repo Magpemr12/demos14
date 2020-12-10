@@ -12,7 +12,7 @@
     </record>
 
     <record id="act_open_hr_rule_group" model="ir.actions.act_window">
-        <field name="name">Agrupación reglas</field>
+        <field name="name">Grouping rules</field>
         <field name="res_model">hr.salary.rule.group</field>
         <field name="view_mode">tree,form</field>
         <field name="type">ir.actions.act_window</field>     
