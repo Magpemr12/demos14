@@ -304,13 +304,77 @@ class HrPayslip(models.Model):
             payslip.total = total
         return res
 
+    def _get_hr_input_type(self):
+
+        input_type = self.env['hr.payslip.input.type'].search([('code','=','P002'), ('name','=','COMMISSION')])
+        if not input_type:
+            input_type = self.env['hr.payslip.input.type'].create({
+                'name':'COMMISSION',
+                'code':'P002',
+            })
+        return input_type
+
+
     def compute_sheet(self):
         uma = self.env['ir.config_parameter'].sudo().get_param('cfdi_nomina.UMA')
         self.UMA = uma
-        res = super().compute_sheet()
+
+        #Get the total on header
+
+        res = super(HrPayslip, self).compute_sheet()
         for line in self.line_ids:
             if line.code == 'S_TOTAL' and line.category_id.code == 'NET':
                 self.total = line.total
+
+
+        #Get other input info based on commmission code P002
+
+        exist=False
+        for input_line in self.input_line_ids:
+            if input_line.code == 'P002':
+                exist = True
+        if not exist:
+            comm_nomina = self.env['hr.mov.nomina'].search([('rule_code','=','P002'),
+                                                            ('name','=','COMMISSION')], limit=1)
+            if comm_nomina:
+                for employee_info in comm_nomina.mov_nomina_lines:
+                    if employee_info.employee_id.id == self.employee_id.id:
+                        hr_input_type = self._get_hr_input_type()
+                        self.env['hr.payslip.input'].create({
+                            'input_type_id':hr_input_type.id,
+                            'amount_python_compute':employee_info.amount_python_compute,
+                            'code':'P002',
+                            'payslip_id':self.id,
+                        })
+
+        #Get Other info on compute sheet in progress
+
+        # table_factor = self.env['hr.factor'].search([], limit=1)
+        # bonus = 0
+        # integ_factor = 0
+        # vacation = 0
+        # years = self.employee_id.anos_servicio
+        # for year_info in table_factor.fi_line_ids:
+        #     if self.employee_id.anos_servicio == 1 and year_info.years_old ==1:
+        #         bonus = year_info.dias_aguinaldo
+        #         integ_factor = year_info.factor_integracion
+        #         vacation = year_info.dias_vacaciones
+        #     elif self.employee_id.anos_servicio == 2 and year_info.years_old ==2:
+        #         bonus = year_info.dias_aguinaldo
+        #         integ_factor = year_info.factor_integracion
+        #         vacation = year_info.dias_vacaciones
+        #
+        # key_factor_info = [(0,0, {'name':'Factor Integracion', 'value':integ_factor}
+        #                  ),
+        #                 (0, 0, {'name':'Salario Diarios Orinario', 'value':bonus}
+        #                  ),
+        #                 (0, 0, {'name':'Dias Trabajados', 'value':years}
+        #                  ),
+        #                 (0, 0, {'name':'Dias Prima Vacaciona', 'value':vacation}
+        #                  )]
+        #
+        # self.write({'sdi_info_calc_ids':key_factor_info})
+
         return res
 
     def compute_sheet_total(self):
