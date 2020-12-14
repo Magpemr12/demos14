@@ -128,6 +128,7 @@ class HrPayslip(models.Model):
     sdo = fields.Float("Daily Salary", copy=False)
     sdi = fields.Float("Integrated daily wage",
                        help="Fixed SDI + variable SDI", readonly=True, copy=False)
+
     sdi_var = fields.Float(
         "Variable SDI", help="Variable daily wage", readonly=True, copy=False)
     sdi_fijo = fields.Float(
@@ -203,6 +204,7 @@ class HrPayslip(models.Model):
                                     compute='_compute_details_by_salary_rule_category',
                                     string='Details by Salary Rule Category')
     UMA = fields.Float("UMA")
+    accumlated = fields.Boolean(string="accumlated",default=False)
 
     def _compute_details_by_salary_rule_category(self):
         for payslip in self:
@@ -305,13 +307,13 @@ class HrPayslip(models.Model):
             payslip.total = total
         return res
 
-    def _get_hr_input_type(self):
+    def _get_hr_input_type(self, name, rule_code):
 
-        input_type = self.env['hr.payslip.input.type'].search([('code','=','P002'), ('name','=','COMMISSION')])
+        input_type = self.env['hr.payslip.input.type'].search([('code','=',rule_code)])
         if not input_type:
             input_type = self.env['hr.payslip.input.type'].create({
-                'name':'COMMISSION',
-                'code':'P002',
+                'name':name,
+                'code':rule_code,
             })
         return input_type
 
@@ -335,16 +337,16 @@ class HrPayslip(models.Model):
             if input_line.code == 'P002':
                 exist = True
         if not exist:
-            comm_nomina = self.env['hr.mov.nomina'].search([('rule_code','=','P002'),
-                                                            ('name','=','COMMISSION')], limit=1)
-            if comm_nomina:
-                for employee_info in comm_nomina.mov_nomina_lines:
+            comm_nomina = self.env['hr.mov.nomina'].search([], limit=1)
+            for nomina in comm_nomina:
+            
+                for employee_info in nomina.mov_nomina_lines:
                     if employee_info.employee_id.id == self.employee_id.id:
-                        hr_input_type = self._get_hr_input_type()
+                        hr_input_type = self._get_hr_input_type(nomina.name, nomina.rule_code)
                         self.env['hr.payslip.input'].create({
                             'input_type_id':hr_input_type.id,
                             'amount_python_compute':employee_info.amount_python_compute,
-                            'code':'P002',
+                            'code':nomina.rule_code,
                             'payslip_id':self.id,
                         })
 
@@ -376,85 +378,96 @@ class HrPayslip(models.Model):
         
         # self.write({'sdi_info_calc_ids':key_factor_info})
 
-        table_vaction = self.env['hr.vacation'].search([],limit=1)
+        # table_vaction = self.env['hr.vacation'].search([],limit=1)
         table_factor = self.env['hr.factor'].search([], limit=1)
         bonus = 0
         integ_factor = 0
         vacation = 0
-        days_worked = 0
-        oridinary_salary = self.contract_id.wage
+        # days_worked = 0
+        # oridinary_salary = self.contract_id.wage
         
         years = self.employee_id.anos_servicio
-        for days in self.worked_days_line_ids:
-            days_worked = days.number_of_days
-        for vacation_days in table_vaction.vac_line_ids:
-            if self.employee_id.anos_servicio == 1 and vacation_days.years_old ==1:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio == 2 and vacation_days.years_old ==2:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio == 3 and vacation_days.years_old == 3:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio == 4 and vacation_days.years_old == 4:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio == 5 and vacation_days.years_old == 5:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio >= 6 and self.employee_id.anos_servicio <= 10 and vacation_days.years_old == 10:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio >= 11 and self.employee_id.anos_servicio <= 15 and vacation_days.years_old == 15:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio >= 16 and self.employee_id.anos_servicio <= 20 and vacation_days.years_old == 20:
-                vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio >= 21 and self.employee_id.anos_servicio <= 25 and vacation_days.years_old == 25:
-                vacation = vacation_days.dias_prima_vacacional
+        # for days in self.worked_days_line_ids:
+        #     days_worked = days.number_of_days
+        # for vacation_days in table_vaction.vac_line_ids:
+        #     if self.employee_id.anos_servicio == 1 and vacation_days.years_old ==1:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio == 2 and vacation_days.years_old ==2:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio == 3 and vacation_days.years_old == 3:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio == 4 and vacation_days.years_old == 4:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio == 5 and vacation_days.years_old == 5:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio >= 6 and self.employee_id.anos_servicio <= 10 and vacation_days.years_old == 10:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio >= 11 and self.employee_id.anos_servicio <= 15 and vacation_days.years_old == 15:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio >= 16 and self.employee_id.anos_servicio <= 20 and vacation_days.years_old == 20:
+        #         vacation = vacation_days.dias_prima_vacacional
+        #     elif self.employee_id.anos_servicio >= 21 and self.employee_id.anos_servicio <= 25 and vacation_days.years_old == 25:
+        #         vacation = vacation_days.dias_prima_vacacional
 
 
         for year_info in table_factor.fi_line_ids:
             if self.employee_id.anos_servicio == 1 and year_info.years_old ==1:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio == 2 and year_info.years_old ==2:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio == 3 and year_info.years_old == 3:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio == 4 and year_info.years_old == 4:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 5 and self.employee_id.anos_servicio <= 9 and year_info.years_old == 9:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 10 and self.employee_id.anos_servicio <=14 and year_info.years_old == 14:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >=15 and self.employee_id.anos_servicio <= 19 and  year_info.years_old == 19:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 20 and self.employee_id.anos_servicio <= 24 and  year_info.years_old == 24:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 25 and self.employee_id.anos_servicio <= 29 and  year_info.years_old == 29:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 30 and self.employee_id.anos_servicio <= 34 and  year_info.years_old == 34:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
             elif self.employee_id.anos_servicio >= 35  and self.employee_id.anos_servicio <= 39 and  year_info.years_old == 39:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
+                vacation = year_info.dias_vacaciones
         
         key_factor_info = [(0,0, {'name':'Factor Integracion', 'value':integ_factor}
                          ),
-                        (0, 0, {'name':'Salario Diarios Orinario','code': 'SDO','value':oridinary_salary}
+                        (0, 0, {'name':'Salario Diarios Orinario','code': 'SDO','value':bonus}
                          ),
-                        (0, 0, {'name':'Dias Trabajados', 'value':days_worked}
+                        (0, 0, {'name':'Dias Trabajados', 'value':years}
                          ),
                         (0, 0, {'name':'Dias Prima Vacaciona', 'code': 'DPV','value':vacation}
                          ),
-                        (0, 0, {'name':'Dias Aguinaldo','code': 'DAG', 'value':bonus}
-                         ),
-                        (0, 0, {'name':'Anos Servicio', 'value':years}
-                         ),
+                        # (0, 0, {'name':'Dias Aguinaldo','code': 'DAG', 'value':bonus}
+                        #  ),
+                        # (0, 0, {'name':'Anos Servicio', 'value':years}
+                        #  ),
                         ]
 
         salary = 0
@@ -489,6 +502,16 @@ class HrPayslip(models.Model):
         if not sdiv_info:
             self.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
 
+        amount=0
+        for rec in self.line_ids:
+            amount = rec.amount
+            name = rec.code + rec.name
+            accumulated_info = [(0,0,{'name':name,'actual_nc':amount}),
+            ]
+            if not self.accumlated:
+                self.write({'acumulado_ids':accumulated_info,
+                        })  
+        self.write({'accumlated':True})        
         return res
 
     def compute_sheet_total(self):
@@ -498,6 +521,14 @@ class HrPayslip(models.Model):
             'cfdi_nomina.catalogo_tipo_deduccion').id
         tipo_otropago_id = self.env.ref(
             'cfdi_nomina.catalogo_tipo_otro_pago').id
+
+        
+        # amount=0
+        # for rec in self.line_ids:
+        #     amount = rec.amount
+        #     accumulated_info = [(0,0,{'name':rec.name,'actual_nc':amount}),
+        #     ]
+        #     self.write({'acumulado_ids':accumulated_info})        
 
         amount_total = 0
         for payslip in self:
@@ -565,7 +596,7 @@ class HrPayslip(models.Model):
                                            ((sbc - (uma * 3)) * payslip.dpnom) * rp.AE3_TRAB) / 100
                 payslip.ae3_patron = (
                                              ((sbc - (uma * 3)) * payslip.dpnom) * rp.AE3_PATRON) / 100
-
+            
             payslip.pe_patron = ((uma * dpnom) * rp.PE_PATRON) / 100
             payslip.ed_trab = ((sbc * dpnom) * rp.ED_TRAB) / 100
             payslip.ed_patron = ((sbc * dpnom) * rp.ED_PATRON) / 100
