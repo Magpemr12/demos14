@@ -247,6 +247,68 @@ class HrPayslip(models.Model):
             return employee.fecha_alta
         return start_date
 
+    @api.model
+    def get_inputs(self, contracts, date_from, date_to):
+        # res = []
+        # if self._context.get('struct_run_id'):
+            # Si en el context viene la estructura a usar desde el Procesamiento de Nominas
+
+        res = []
+        if self.struct_id:
+            # structure_ids = [self.struct_id]
+            # rule_ids = self.env['hr.payroll.structure'].browse(structure_ids).rule_ids
+            # sorted_rule_ids = [id for id, sequence in sorted(rule_ids, key=lambda x: x[1])]
+            inputs = self.struct_id.rule_ids.mapped('input_ids')
+            payslip_input_type_obj = self.env['hr.payslip.input.type']
+            for input in inputs:
+                type = payslip_input_type_obj.search([('name', '=', input.name), ('code', '=', input.code),
+                                                            ('struct_ids', 'in', self.struct_id.id)], limit=1)
+                if not type:
+                  type = payslip_input_type_obj.create({
+                      'name': input.name,
+                      'code': input.code,
+                      'struct_ids': [(4, self.struct_id.id)]
+                  })
+                input_data = {
+                    'input_type_id': type.id,
+                    'code': input.code,
+                }
+                res += [input_data]
+
+            employee = self.employee_id
+
+            for i, line in enumerate(res):
+                code = line.get('code')
+                #  Movimientos de nomina adicionales
+                movnom_line = self.env['hr.mov.nomina.line'].search([('mov_nomina_id.rule_code', '=', code),
+                                                                     ('mov_nomina_id.state', '=', 'alta'),
+                                                                     ('employee_id', '=', employee.id),
+                                                                     '|',
+                                                                     ('date_deadline', '>=', date_to),
+                                                                     ('date_deadline', '=', None),
+                                                                     ], limit=1)
+                amount_python_compute = ''
+                # Si la linea del mov tiene formula, se le da preferencia ante la formula del movimiento de nomina
+                if movnom_line:
+                    if movnom_line.amount_python_compute and movnom_line.amount_python_compute.strip():
+                        amount_python_compute = movnom_line.amount_python_compute
+                    elif movnom_line.mov_nomina_id.amount_python_compute:
+                        amount_python_compute = movnom_line.mov_nomina_id.amount_python_compute.strip() or ''
+
+                #  Si la regla salarial tiene destajo
+                destajo = self.env['hr.salary.rule'].search([('code', '=', code)]).destajo
+
+                # Si hay entrada y si tiene codigo python
+                rule_input = self.env['hr.rule.input'].search([('code', '=', code)])
+                if rule_input and rule_input.amount_python_compute:
+                    amount_python_compute = rule_input.amount_python_compute
+
+                res[i].update({
+                    'amount_python_compute': amount_python_compute,
+                    'quantity': 0 if destajo else 1,
+                })
+        return res
+
     @api.onchange('employee_id', 'struct_id', 'contract_id', 'date_from', 'date_to', 'day_leave_from', 'day_leave_to')
     def _onchange_employee(self):
         self.day_leave_from = self.check_start_date(
@@ -255,22 +317,31 @@ class HrPayslip(models.Model):
             self.employee_id, self.date_from)
         if self.contract_id:
             self.journal_id = self.contract_id.salary_journal if self.contract_id.salary_journal else False
-        if self.struct_id and self.struct_id.rule_ids and self.struct_id.rule_ids.input_ids:
-            self.input_line_ids = [(5, 0)]
-            payslip_input_type_obj = self.env['hr.payslip.input.type']
-            for line in self.struct_id.rule_ids.input_ids:
-                type = payslip_input_type_obj.search([('name', '=', line.name), ('code', '=', line.code),
-                                                      ('struct_ids', 'in', self.struct_id.id)], limit=1)
-                if not type:
-                    type = payslip_input_type_obj.create({
-                        'name': line.name,
-                        'code': line.code,
-                        'struct_ids': [(4, self.struct_id.id)]
-                    })
-                self.input_line_ids = [(0, 0, {
-                    'input_type_id': type.id,
-                    'code': line.code
-                })]
+        if self.employee_id and self.employee_id.registro_patronal:
+            self.registro_patronal_codigo = self.employee_id.registro_patronal.name
+        self.input_line_ids = [(5, 0)]
+        self.input_line_ids = [(0, 0, val ) for val in self.get_inputs([self.contract_id], self.date_from, self.date_to)]
+        # if self.struct_id and self.struct_id.rule_ids and self.struct_id.rule_ids.input_ids:
+        #     self.input_line_ids = [(5, 0)]
+        #     payslip_input_type_obj = self.env['hr.payslip.input.type']
+        #     for line in self.struct_id.rule_ids.input_ids:
+        #         type = payslip_input_type_obj.search([('name', '=', line.name), ('code', '=', line.code),
+        #                                               ('struct_ids', 'in', self.struct_id.id)], limit=1)
+        #         if not type:
+        #             type = payslip_input_type_obj.create({
+        #                 'name': line.name,
+        #                 'code': line.code,
+        #                 'struct_ids': [(4, self.struct_id.id)]
+        #             })
+        #         self.input_line_ids = [(0, 0, {
+        #             'input_type_id': type.id,
+        #             'code': line.code
+        #         })]
+        # for input in self.input_line_ids:
+        #     movement = self.env['hr.mov.nomina.line'].search([('employee_id', '=', self.employee_id.id),
+        #                                                       ('mov_nomina_id.rule_code', '=', input.code)], limit=1)
+        #     if movement:
+        #         input.amount_python_compute = movement.amount_python_compute
         return super(HrPayslip, self)._onchange_employee()
 
 
@@ -323,7 +394,6 @@ class HrPayslip(models.Model):
         self.UMA = uma
 
         #Get the total on header
-
         res = super(HrPayslip, self).compute_sheet()
         for line in self.line_ids:
             if line.code == 'S_TOTAL' and line.category_id.code == 'NET':
@@ -511,7 +581,8 @@ class HrPayslip(models.Model):
             if not self.accumlated:
                 self.write({'acumulado_ids':accumulated_info,
                         })  
-        self.write({'accumlated':True})        
+        self.write({'accumlated':True})
+        self.calc_cuotas_obrero_patronal()
         return res
 
     def compute_sheet_total(self):
@@ -564,8 +635,8 @@ class HrPayslip(models.Model):
             rp = payslip.employee_id.company_id.registro_patronal
             if not uma:
                 uma = rp.UMA
-            sbc = payslip.sdi
 
+            sbc = payslip.sdi
             # dias del periodo de la nomina 15 o 16 JRV 20190514
             date_from = fields.Date.from_string(payslip.date_from)
             date_to = fields.Date.from_string(payslip.date_to)
@@ -578,7 +649,8 @@ class HrPayslip(models.Model):
             # suma de faltas en el periodo  JRV 21112019
             data_faltas = payslip.worked_days_line_ids.filtered(
                 lambda l: l.code == 'No pagado' or l.code == 'PS' or l.code ==
-                          'Incapacidad General' or l.code == 'Incapacidad Permanente Parcial' or l.code == 'Incapacidad Permanente Toatl')
+                          'Incapacidad General' or l.code == 'Incapacidad Permanente Parcial' or \
+                          l.code == 'Incapacidad Permanente Toatl')
             dias_faltas = sum(data_faltas.mapped('number_of_days'))
 
             ################
@@ -722,74 +794,6 @@ class HrPayslip(models.Model):
             res.extend(leaves.values())
         return res
 
-    @api.model
-    def get_inputs(self, contracts, date_from, date_to):
-        if self._context.get('struct_run_id'):
-            # Si en el context viene la estructura a usar desde el
-            # Procesamiento de Nominas
-
-            res = []
-            structure_ids = [self._context.get('struct_run_id')]
-            rule_ids = self.env['hr.payroll.structure'].browse(
-                structure_ids).get_all_rules()
-            sorted_rule_ids = [id for id, sequence in sorted(
-                rule_ids, key=lambda x: x[1])]
-            inputs = self.env['hr.salary.rule'].browse(
-                sorted_rule_ids).mapped('input_ids')
-
-            for contract in contracts:
-                for input in inputs:
-                    input_data = {
-                        'name': input.name,
-                        'code': input.code,
-                        'contract_id': contract.id,
-                    }
-                    res += [input_data]
-        else:
-            res = super().get_inputs(contracts, date_from, date_to)
-
-        employee = self.employee_id or contracts.employee_id
-
-        for i, line in enumerate(res):
-            code = line.get('code')
-            #  Movimientos de nomina adicionales
-            movnom_line = self.env['hr.mov.nomina.line'].search([('mov_nomina_id.rule_code', '=', code),
-                                                                 ('mov_nomina_id.state',
-                                                                  '=', 'alta'),
-                                                                 ('employee_id',
-                                                                  '=', employee.id),
-                                                                 '|',
-                                                                 ('date_deadline',
-                                                                  '>=', date_to),
-                                                                 ('date_deadline',
-                                                                  '=', None),
-                                                                 ], limit=1)
-            amount_python_compute = ''
-            # Si la linea del mov tiene formula, se le da preferencia ante la
-            # formula del movimiento de nomina
-            if movnom_line:
-                if movnom_line.amount_python_compute and movnom_line.amount_python_compute.strip():
-                    amount_python_compute = movnom_line.amount_python_compute
-                elif movnom_line.mov_nomina_id.amount_python_compute:
-                    amount_python_compute = movnom_line.mov_nomina_id.amount_python_compute.strip() or ''
-
-            #  Si la regla salarial tiene destajo
-            destajo = self.env['hr.salary.rule'].search(
-                [('code', '=', code)]).destajo
-
-            # Si hay entrada y si tiene codigo python
-            rule_input = self.env['hr.rule.input'].search(
-                [('code', '=', code)])
-            if rule_input and rule_input.amount_python_compute:
-                amount_python_compute = rule_input.amount_python_compute
-
-            res[i].update({
-                'amount_python_compute': amount_python_compute,
-                'quantity': 0 if destajo else 1,
-            })
-
-        return res
-
     def _get_payslip_lines(self):
         def _sum_salary_rule_category(localdict, category, amount):
             if category.parent_id:
@@ -818,15 +822,15 @@ class HrPayslip(models.Model):
                 'contract': contract
             }
         }
-        # self.env['hr.salary.rule']._set_global_values(localdict)
-        # self.set_acumulado_variables(localdict, self.struct_id.rule_ids)
+        self.env['hr.salary.rule']._set_global_values(localdict)
+        self.set_acumulado_variables(localdict, self.struct_id.rule_ids)
         for rule in sorted(self.struct_id.rule_ids, key=lambda x: x.sequence):
             localdict.update({
                 'result': None,
                 'result_qty': 1.0,
                 'result_rate': 100})
             if rule._satisfy_condition(localdict):
-                # rule._compute_last_income_rule(localdict, self)
+                rule._compute_last_income_rule(localdict, self)
                 amount, qty, rate = rule._compute_rule(localdict)
                 # check if there is already a rule computed with that code
                 previous_amount = rule.code in localdict and localdict[rule.code] or 0.0
@@ -1499,12 +1503,12 @@ class HrPayslip(models.Model):
             raise UserError(
                 'No hay calendario definido para la tabla Base Gravable %s' % tbgrv.name)
 
+
         field_name = field_name or tbgrv.data_field
         # No incluye nomina actual
         anual_ac_lines = anual_lines.filtered(
             lambda l: l.slip_id.id != payslip.id)
         anual = sum(anual_ac_lines.mapped(field_name))
-
         anterior = 0
         fecha1, fecha2 = tbgrv.acum_calendar_id.get_periodo_anterior(
             payslip.date_from)
@@ -1520,6 +1524,7 @@ class HrPayslip(models.Model):
         lines_actual = anual_ac_lines.filtered(
             lambda l: l.slip_id.date_from >= fecha1 and l.slip_id.date_to <= fecha2
         )
+
         actual_ac = sum(lines_actual.mapped(field_name))
         # payslip_lines = self.env['hr.payslip.line'].search([
         #     ('slip_id.date_from', '>=', fecha1),
