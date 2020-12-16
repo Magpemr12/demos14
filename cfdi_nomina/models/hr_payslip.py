@@ -500,8 +500,6 @@ class HrPayslip(models.Model):
                          ),
                         ]
 
-        self.sdi_fijo = integ_factor * daily_salary
-        self.sdi = self.sdi_fijo + self.sdi_var
         salary = 0
         for sal in self.line_ids:
             if sal.code == 'P001' and sal.name == 'SUELDO':
@@ -549,9 +547,7 @@ class HrPayslip(models.Model):
             ]
             if not self.accumlated:
                 self.write({'acumulado_ids':accumulated_info,
-                        })
-
-
+                        })  
         self.write({'accumlated':True})
         self.calc_cuotas_obrero_patronal()
         return res
