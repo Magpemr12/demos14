@@ -10,13 +10,13 @@ class HrMovNomina(models.Model):
     _rec_name = 'name'
 
     name = fields.Char('Name', required=True)
-    rule_id = fields.Many2one('hr.salary.rule', 'Salary Rule', required=True)
+    rule_id = fields.Many2one('hr.salary.rule', 'Salary Rule')
     rule_code = fields.Char(related='rule_id.code', type="char", string="Code", readonly=True)
     amount_python_compute = fields.Text('Formula')
     state = fields.Selection([('alta', 'Alta'), ('baja', 'Baja')], string='Status', default='baja')
     mov_nomina_lines = fields.One2many('hr.mov.nomina.line', 'mov_nomina_id', string='Employees', required=True)
 
-    
+
     def action_baja(self):
         self.state = 'baja'
 

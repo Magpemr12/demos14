@@ -402,6 +402,7 @@
             </field>
             <field name="credit_note" position="after">
                 <field name="tipo_calculo"/>
+                <field name="accumlated" invisible="1"/>
 <!--                <field name="payment_date"/>-->
             </field>
             <xpath expr="//notebook/page[@name='salary_computation']" position="after">

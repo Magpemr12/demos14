@@ -319,8 +319,10 @@ class HRSalaryRule(models.Model):
         # /////////////////////////////////////////////
         # A la primera deducción se calcula el SDI, SUBE en base al total
         # gravado IMSS al momento
-        if not localdict.get('SDI') and self.tipo_id.id == self.env.ref('cfdi_nomina.catalogo_tipo_deduccion').id:
 
+        #At the first deduction, the SDI is calculated, 
+        #it goes up based on the total taxed IMSS at the time
+        if not localdict.get('SDI') and self.tipo_id.id == self.env.ref('cfdi_nomina.catalogo_tipo_deduccion').id:
             ICPSudo = self.env['ir.config_parameter'].sudo()
 
             localdict['SDI'] = payslip.calculate_sdi(localdict)
