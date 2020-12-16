@@ -449,7 +449,7 @@ class HrPayslip(models.Model):
 
         table_vaction = self.env['hr.vacation'].search([],limit=1)
         table_factor = self.env['hr.factor'].search([], limit=1)
-        bonus = self.employee_id.sueldo_diario
+        daily_salary = self.employee_id.sueldo_diario
         integ_factor = 0
         vacation = 0
         # days_worked = 0
@@ -520,16 +520,16 @@ class HrPayslip(models.Model):
         
         key_factor_info = [(0,0, {'name':'Factor Integracion', 'value':integ_factor}
                          ),
-                        (0, 0, {'name':'Salario Diarios Orinario','code': 'SDO','value':bonus}
+                        (0, 0, {'name':'Salario Diarios Orinario','code': 'SDO','value':daily_salary}
                          ),
                         (0, 0, {'name':'Dias Trabajados', 'value': Dias_Trabajados}
                          ),
                         (0, 0, {'name':'Dias Prima Vacaciona', 'code': 'DPV','value':vacation}
                          ),
-                        # (0, 0, {'name':'Dias Aguinaldo','code': 'DAG', 'value':bonus}
-                        #  ),
-                        # (0, 0, {'name':'Anos Servicio', 'value':years}
-                        #  ),
+                        (0, 0, {'name':'Dias Aguinaldo','code': 'DAG', 'value':bonus}
+                         ),
+                        (0, 0, {'name':'Anos Servicio', 'value':years}
+                         ),
                         ]
 
         salary = 0
