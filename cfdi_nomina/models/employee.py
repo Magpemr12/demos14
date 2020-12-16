@@ -251,6 +251,7 @@ class Employee(models.Model):
             self.status_imss = 'alta'
 
     def write(self, vals):
+        res = super(Employee, self).write(vals)
         for employee in self:
             if 'fecha_alta' in vals:
                     if employee.fecha_alta != vals['fecha_alta']:
@@ -276,7 +277,8 @@ class Employee(models.Model):
             #     vals.update(status_imss='alta')
 
             if vals.get('sueldo_imss'):
-                if self.sueldo_imss != vals.get('sueldo_imss'):
+                # if self.sueldo_imss != vals.get('sueldo_imss'):
+                if float_compare(self.sueldo_imss, vals.get('sueldo_imss', 0), precision_digits=2) != 0:
                     vals.update(historico_sueldo_imss=[(0, 0, {
                         'name': fields.Date.today(),
                         'sueldo_old': self.sueldo_imss,
@@ -284,7 +286,7 @@ class Employee(models.Model):
                         'user_id': self.env.uid
                     })])
 
-        return super(Employee, self).write(vals)
+        return res
 
 
 class HistoricalSalaryIMSS(models.Model):
@@ -378,7 +380,9 @@ class HrApplicant(models.Model):
                     'form_view_initial_mode': 'edit',
                     'default_applicant_id': applicant.ids,
                     }
-
+                    
+                print("**employee_data***",employee_data)
+                    
         dict_act_window = self.env['ir.actions.act_window']._for_xml_id('hr.open_view_employee_list')
         dict_act_window['context'] = employee_data
         return dict_act_window

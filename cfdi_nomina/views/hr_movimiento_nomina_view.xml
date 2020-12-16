@@ -47,7 +47,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="rule_id" required="1"/>
+                            <field name="rule_id"/>
                             <field name="rule_code"/>
                         </group>
                         <group>
@@ -78,7 +78,7 @@
     </record>
 
     <record id="act_mov_nomina" model="ir.actions.act_window">
-        <field name="name">Movements Payroll</field>
+        <field name="name">Movimientos Nómina</field>
         <field name="res_model">hr.mov.nomina</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_hr_movnomina_tree"/>

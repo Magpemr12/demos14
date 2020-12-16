@@ -19,7 +19,7 @@
     </record>
 
     <record id="act_open_pendientes" model="ir.actions.act_window">
-        <field name="name">Stamping earrings</field>
+        <field name="name">Pendientes timbrar</field>
         <field name="res_model">hr.payslip</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_hr_payslip_tree_pendientes"/>
