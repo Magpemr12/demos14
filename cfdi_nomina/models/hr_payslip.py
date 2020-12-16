@@ -420,12 +420,44 @@ class HrPayslip(models.Model):
                         })
 
         #Get Other info on compute sheet in progress
+
+        # table_factor = self.env['hr.factor'].search([], limit=1)
+        # bonus = 0
+        # integ_factor = 0
+        # vacation = 0
+        # years = self.employee_id.anos_servicio
+        # for year_info in table_factor.fi_line_ids:
+        #     if self.employee_id.anos_servicio == 1 and year_info.years_old ==1:
+        #         bonus = year_info.dias_aguinaldo
+        #         integ_factor = year_info.factor_integracion
+        #         vacation = year_info.dias_vacaciones
+        #     elif self.employee_id.anos_servicio == 2 and year_info.years_old ==2:
+        #         bonus = year_info.dias_aguinaldo
+        #         integ_factor = year_info.factor_integracion
+        #         vacation = year_info.dias_vacaciones
+        
+        # key_factor_info = [(0,0, {'name':'Factor Integracion', 'value':integ_factor}
+        #                  ),
+        #                 (0, 0, {'name':'Salario Diarios Orinario', 'value':bonus}
+        #                  ),
+        #                 (0, 0, {'name':'Dias Trabajados', 'value':years}
+        #                  ),
+        #                 (0, 0, {'name':'Dias Prima Vacaciona', 'value':vacation}
+        #                  )]
+        
+        # self.write({'sdi_info_calc_ids':key_factor_info})
+
         table_vaction = self.env['hr.vacation'].search([],limit=1)
         table_factor = self.env['hr.factor'].search([], limit=1)
         daily_salary = self.employee_id.sueldo_diario
         integ_factor = 0
         vacation = 0
+        # days_worked = 0
+        # oridinary_salary = self.contract_id.wage
+        
         years = self.employee_id.anos_servicio
+        # for days in self.worked_days_line_ids:
+        #     days_worked = days.number_of_days
         for vacation_days in table_vaction.vac_line_ids:
             if self.employee_id.anos_servicio == 1 and vacation_days.years_old ==1:
                 vacation = vacation_days.dias_prima_vacacional
@@ -505,17 +537,10 @@ class HrPayslip(models.Model):
             if sal.code == 'P001' and sal.name == 'SUELDO':
                 salary = sal.total
 
-        #sdo * sdv / 365 * dias_trabjajados
-        parte_prop_prima_vacacional = daily_salary * vacation / 365 * Dias_Trabajados
-
-        # sdo * sdv / 365 * dias_trabjajados
-        parte_prop_aguinaldo = bonus * daily_salary / 365 * Dias_Trabajados
-
-        sdip_line_total = salary + parte_prop_prima_vacacional + parte_prop_aguinaldo
         sdip_info_calc_ids = [(0,0,{'name':'SUELDO','code':'P001','value':salary}),
-                              (0,0,{'name':'Parte prop prima vacacional', 'value': parte_prop_prima_vacacional})
-                              (0,0, {'name': 'Parte prop. aguinaldo', 'value': parte_prop_aguinaldo})
-                              (0, 0, {'name': 'Total de percepciones', 'value': sdip_line_total})]
+                            (0,0,{'name':'Parte prop prima vacacional'})
+
+            ]
 
         sdiv_info_calc_ids = [(0,0,{'name':'Dias Trabajados Bimestre'}),
                             (0,0,{'name':'Percepciones Bimestre'})
