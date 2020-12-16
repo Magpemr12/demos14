@@ -47,7 +47,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="rule_id"/>
+                            <field name="rule_id" required="1"/>
                             <field name="rule_code"/>
                         </group>
                         <group>
