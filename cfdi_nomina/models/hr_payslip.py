@@ -467,7 +467,7 @@ class HrPayslip(models.Model):
                 vacation = vacation_days.dias_prima_vacacional
             elif self.employee_id.anos_servicio == 4 and vacation_days.years_old == 4:
                 vacation = vacation_days.dias_prima_vacacional
-            elif self.employee_id.anos_servicio >= 5 and vacation_days.years_old <= 10:
+            elif self.employee_id.anos_servicio >= 5 and vacation_days.years_old <10:
                 vacation = vacation_days.dias_prima_vacacional
             elif self.employee_id.anos_servicio >= 10 and self.employee_id.anos_servicio < 15:
                 vacation = vacation_days.dias_prima_vacacional
