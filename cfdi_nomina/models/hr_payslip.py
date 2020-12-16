@@ -483,47 +483,47 @@ class HrPayslip(models.Model):
             if self.employee_id.anos_servicio == 1 and year_info.years_old ==1:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio == 2 and year_info.years_old ==2:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio == 3 and year_info.years_old == 3:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio == 4 and year_info.years_old == 4:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 5 and self.employee_id.anos_servicio <= 9 and year_info.years_old == 9:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 10 and self.employee_id.anos_servicio <=14 and year_info.years_old == 14:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >=15 and self.employee_id.anos_servicio <= 19 and  year_info.years_old == 19:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 20 and self.employee_id.anos_servicio <= 24 and  year_info.years_old == 24:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 25 and self.employee_id.anos_servicio <= 29 and  year_info.years_old == 29:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 30 and self.employee_id.anos_servicio <= 34 and  year_info.years_old == 34:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
             elif self.employee_id.anos_servicio >= 35  and self.employee_id.anos_servicio <= 39 and  year_info.years_old == 39:
                 bonus = year_info.dias_aguinaldo
                 integ_factor = year_info.factor_integracion
-                vacation = year_info.dias_prima_vacacional
+                vacation = year_info.prima_vacacional
 
         Dias_Trabajados = 0
         for work_day in self.worked_days_line_ids:
