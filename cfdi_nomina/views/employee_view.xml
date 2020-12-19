@@ -159,7 +159,7 @@
                     <page string="IMSS History" name="historico_imss">
                         <group string="SDI">
                             <field name="historico_sueldo_imss" nolabel="1" >
-                                <tree string="Histórico sueldo" editable="bottom" delete="0">
+                                <tree string="Histórico sueldo" create="0" delete="0">
                                     <field name="name"/>
                                     <field name="sueldo_old"/>
                                     <field name="sueldo_new"/>

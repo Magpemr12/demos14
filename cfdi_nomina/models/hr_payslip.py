@@ -108,7 +108,6 @@ class HrPayslipLine(models.Model):
                        help="The code of salary rules can be used as reference in computation of other rules. "
                             "In that case, it is case sensitive.")
 
-
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
     _description = 'hr payslip'
@@ -445,7 +444,7 @@ class HrPayslip(models.Model):
                 vacation = vacation_days.dias_prima_vacacional
             elif self.employee_id.anos_servicio >= 25:
                 vacation = vacation_days.dias_prima_vacacional
-
+        bonus = 0
         for year_info in table_factor.fi_line_ids:
             if self.employee_id.anos_servicio == 1 and year_info.years_old ==1:
                 bonus = year_info.dias_aguinaldo
@@ -518,11 +517,70 @@ class HrPayslip(models.Model):
                               (0,0,{'name':'Parte prop prima vacacional', 'value': parte_prop_prima_vacacional}),
                               (0,0, {'name': 'Parte prop. aguinaldo', 'value': parte_prop_aguinaldo}),
                               (0, 0, {'name': 'Total de percepciones', 'value': sdip_line_total})]
-
-        sdiv_info_calc_ids = [(0,0,{'name':'Dias Trabajados Bimestre'}),
-                            (0,0,{'name':'Percepciones Bimestre'})
-        ]
         
+        # sdiv_info_calc_ids = [(0,0,{'name':'Dias Trabajados Bimestre','value':''}),
+        #                     (0,0,{'name':'COMMISIONES','code':'P002','value':''}),
+        #                     (0,0,{'name':'COMPLEMENTO A SUELDOS','code':'P017','value':''}),
+        #                     (0,0,{'name':'DESPENSA EN EFFECTIVO','code':'P014','value':''}),
+        #                     (0,0,{'name':'Percepciones Bimestre','value':''})
+        # ]
+        sdiv_info_calc_ids = []
+        employee = self.employee_id
+        tabla_id = self.env.ref('cfdi_nomina.hr_taxable_base_id2').id,
+        tbgrv = self.env['hr.basegravable.acum'].browse(tabla_id)
+        if not tbgrv:
+            raise UserError(
+                'No hay tabla Base Gravable con id %s' % tabla_id)
+        if not tbgrv.acum_calendar_id:
+            raise UserError(
+                'No hay calendario definido para la tabla Base Gravable %s' % tbgrv.name)
+        str_start_date, str_end_date = tbgrv.acum_calendar_id.get_periodo_anterior(
+                self.date_from)
+
+        nomina_bimestral = self.env['hr.payslip'].search([
+            ('employee_id', '=', employee.id),
+            ('state', '=', 'done'),
+            ('date_from', '>=', str_start_date),
+            ('date_to', '<=', str_end_date),            
+        ])
+        
+        if nomina_bimestral:
+
+            bimestre_worked_days = 0
+            nomina_bimestral_ids = []
+            for nominab in nomina_bimestral:
+                # bimestre_worked_days += nominab._get_days("WORK100")[0]
+                nomina_bimestral_ids.append(nominab.id)
+
+            bimestre_worked_days = 60
+            sdiv_info_calc_ids.append(
+                (0, 0, {'name': 'Dias trabajados Bimestre', 'value': bimestre_worked_days}))
+
+            lines_nomina_bimestral_ids = self.env['hr.payslip.line'].search([
+                ('slip_id', 'in', nomina_bimestral_ids),
+                ('gravado_imss', '>', 0),  # Usar total_gravado imss
+                ('tipo_de_percepcion', '=', 'variable'),
+            ])
+            # total_percepciones = sum(lines_nomina_bimestral_ids.mapped('gravado_imss'))
+            total_percepciones = 0.0
+            pvar_dict = {}
+            for line in lines_nomina_bimestral_ids:
+                total_percepciones += line.gravado_imss
+                current_pvar_struct = pvar_dict.setdefault(line.code, {
+                    'name': line.name,
+                    'code': line.code,
+                    'value': 0,
+                })
+                current_pvar_struct['value'] += line.gravado_imss
+
+            for pvar, v in pvar_dict.items():
+                sdiv_info_calc_ids.append((0, 0, v))
+
+            sdiv_info_calc_ids.append(
+                (0, 0, {'name': 'Percepciones bimestre', 'value': total_percepciones}))
+
+            # sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
+    
         sdi_info = False
         for record in self.sdi_info_calc_ids:
             sdi_info = True
@@ -541,6 +599,7 @@ class HrPayslip(models.Model):
         if not sdiv_info:
             self.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
 
+        self.employee_id.update({'sueldo_imss':self.sdi})
         amount=0
         for rec in self.line_ids:
             amount = rec.amount
@@ -550,6 +609,7 @@ class HrPayslip(models.Model):
             if not self.accumlated:
                 self.write({'acumulado_ids':accumulated_info,
                         })
+
 
         self.write({'accumlated':True})
         self.calc_cuotas_obrero_patronal()

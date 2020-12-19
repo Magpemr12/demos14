@@ -270,10 +270,6 @@ class Employee(models.Model):
                     employee.address_home_id.vat != employee.rfc:
                     raise UserError(_("The RFC does not match the Partner's RFC!"))
 
-            # if vals.get('fecha_baja'):
-            #     vals.update(status_imss='baja')
-            # else:
-            #     vals.update(status_imss='alta')
 
             if vals.get('sueldo_imss'):
                 if self.sueldo_imss != vals.get('sueldo_imss'):
@@ -283,7 +279,7 @@ class Employee(models.Model):
                         'sueldo_new': vals.get('sueldo_imss'),
                         'user_id': self.env.uid
                     })])
-
+           
         return super(Employee, self).write(vals)
 
 

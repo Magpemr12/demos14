@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
     <record model="ir.ui.view" id="hr_salary_rule_form_inherit">
         <field name="name">hr.salary.rule.form.inherit</field>
         <field name="model">hr.salary.rule</field>
@@ -31,7 +30,7 @@
                 </group>
             </xpath>
             <xpath expr="//form//sheet//field[@name='appears_on_payslip']" position="after">
-                <field name="display_name"/>
+                <field name="display_name" required="1"/>
             </xpath>
             <xpath expr="//notebook/page[@name='description']" position="after">
                 <page string="Inputs">
