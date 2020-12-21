@@ -299,8 +299,11 @@ class HrPayslip(models.Model):
 
                 # Si hay entrada y si tiene codigo python
                 rule_input = self.env['hr.rule.input'].search([('code', '=', code)])
-                if rule_input and rule_input.amount_python_compute:
-                    amount_python_compute = rule_input.amount_python_compute
+                for rec in rule_input:
+                    if rec and rec.amount_python_compute:
+                        amount_python_compute = rec.amount_python_compute
+                # if rule_input and rule_input.amount_python_compute:
+                #     amount_python_compute = rule_input.amount_python_compute
 
                 res[i].update({
                     'amount_python_compute': amount_python_compute,
@@ -549,10 +552,9 @@ class HrPayslip(models.Model):
             bimestre_worked_days = 0
             nomina_bimestral_ids = []
             for nominab in nomina_bimestral:
-                # bimestre_worked_days += nominab._get_days("WORK100")[0]
+                bimestre_worked_days += nominab._get_days("WORK100")[0]
                 nomina_bimestral_ids.append(nominab.id)
-
-            bimestre_worked_days = 60
+            # bimestre_worked_days = 60
             sdiv_info_calc_ids.append(
                 (0, 0, {'name': 'Dias trabajados Bimestre', 'value': bimestre_worked_days}))
 
@@ -579,8 +581,9 @@ class HrPayslip(models.Model):
             sdiv_info_calc_ids.append(
                 (0, 0, {'name': 'Percepciones bimestre', 'value': total_percepciones}))
 
-            # sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
-    
+            sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
+            self.write({'sdi_var':sdi_var})
+
         sdi_info = False
         for record in self.sdi_info_calc_ids:
             sdi_info = True
@@ -1081,7 +1084,6 @@ class HrPayslip(models.Model):
                     (0, 0, {'name': 'Percepciones bimestre', 'value': total_percepciones}))
 
                 sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
-
             else:
                 # Si no hay nominas anteriores se toma el SALARIO BASE DE
                 # COTIZACION del empelado para SDI_FIJO
