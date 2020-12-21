@@ -573,7 +573,7 @@ class HrPayslip(models.Model):
             ('state', '=', 'done'),
             ('date_from', '>=', str_start_date),
             ('date_to', '<=', str_end_date),
-        ])
+        ], limit=2, order='id desc')
 
 
         if nomina_bimestral:
