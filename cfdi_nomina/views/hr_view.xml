@@ -597,8 +597,8 @@
 
                         <label for="ceav_patron" string="Cesantia and old age"/>
                         <field name="ceav_patron" nolabel="1" class="oe_inline"/>
-                        <label for="ceav_patron" string="-"/>
-                        <label for="ceav_patron" string=""/>
+                        <field name="ceav_trab" nolabel="1" class="oe_inline"/>
+                        <label for="ceav_trab" string=""/>
 
                         <label for="infonavit_patron" string="INFONAVIT"/>
                         <field name="infonavit_patron" nolabel="1" class="oe_inline"/>
