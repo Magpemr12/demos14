@@ -582,7 +582,8 @@ class HrPayslip(models.Model):
             nomina_bimestral_ids = []
 
             for nominab in nomina_bimestral:
-                bimestre_worked_days += self.fetch_days_of_month(nominab)
+                # bimestre_worked_days += self.fetch_days_of_month(nominab)
+                bimestre_worked_days += nominab._get_days("WORK100")[0]
                 nomina_bimestral_ids.append(nominab.id)
 
             sdiv_info_calc_ids.append(
