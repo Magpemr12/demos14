@@ -391,6 +391,37 @@ class HrPayslip(models.Model):
         return input_type
 
 
+    @api.depends('sdi_fijo','sdi_var')
+    def update_idw(self):
+
+        for payslip in self:
+            payslip.sdi = payslip.sdi_fijo + payslip.sdi_var
+
+
+    def days_in_month(self, y, m):
+        leap = 0
+        if y % 400 == 0:
+            leap = 1
+        elif y % 100 == 0:
+            leap = 0
+        elif y % 4 == 0:
+            leap = 1
+        if m == 2:
+            return 28 + leap
+        list = [1, 3, 5, 7, 8, 10, 12]
+        if m in list:
+            return 31
+        return 30
+
+
+    def fetch_days_of_month(self, payslip):
+
+        print ("payslip ::::::::",payslip.date_from, type(payslip.date_from))
+        print(payslip.date_from.strftime("%y"))
+        print(payslip.date_from.strftime("%m"))
+        days = self.days_in_month(int(payslip.date_from.strftime("%y")), int(payslip.date_from.strftime("%m")))
+        return days
+
     def compute_sheet(self):
         uma = self.env['ir.config_parameter'].sudo().get_param('cfdi_nomina.UMA')
         self.UMA = uma
@@ -403,7 +434,9 @@ class HrPayslip(models.Model):
 
 
         #Get other input info based on commmission code P002
-
+        self.sdi_info_calc_ids.unlink()
+        self.sdip_info_calc_ids.unlink()
+        self.sdiv_info_calc_ids.unlink()
         exist=False
         for input_line in self.input_line_ids:
             if input_line.code == 'P002':
@@ -521,12 +554,7 @@ class HrPayslip(models.Model):
                               (0,0, {'name': 'Parte prop. aguinaldo', 'value': parte_prop_aguinaldo}),
                               (0, 0, {'name': 'Total de percepciones', 'value': sdip_line_total})]
         
-        # sdiv_info_calc_ids = [(0,0,{'name':'Dias Trabajados Bimestre','value':''}),
-        #                     (0,0,{'name':'COMMISIONES','code':'P002','value':''}),
-        #                     (0,0,{'name':'COMPLEMENTO A SUELDOS','code':'P017','value':''}),
-        #                     (0,0,{'name':'DESPENSA EN EFFECTIVO','code':'P014','value':''}),
-        #                     (0,0,{'name':'Percepciones Bimestre','value':''})
-        # ]
+
         sdiv_info_calc_ids = []
         employee = self.employee_id
         tabla_id = self.env.ref('cfdi_nomina.hr_taxable_base_id2').id,
@@ -544,17 +572,19 @@ class HrPayslip(models.Model):
             ('employee_id', '=', employee.id),
             ('state', '=', 'done'),
             ('date_from', '>=', str_start_date),
-            ('date_to', '<=', str_end_date),            
+            ('date_to', '<=', str_end_date),
         ])
-        
+
+
         if nomina_bimestral:
 
             bimestre_worked_days = 0
             nomina_bimestral_ids = []
+
             for nominab in nomina_bimestral:
-                bimestre_worked_days += nominab._get_days("WORK100")[0]
+                bimestre_worked_days += self.fetch_days_of_month(nominab)
                 nomina_bimestral_ids.append(nominab.id)
-            # bimestre_worked_days = 60
+
             sdiv_info_calc_ids.append(
                 (0, 0, {'name': 'Dias trabajados Bimestre', 'value': bimestre_worked_days}))
 
@@ -584,23 +614,10 @@ class HrPayslip(models.Model):
             sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
             self.write({'sdi_var':sdi_var})
 
-        sdi_info = False
-        for record in self.sdi_info_calc_ids:
-            sdi_info = True
-        if not sdi_info:
-            self.write({'sdi_info_calc_ids':key_factor_info})
 
-        sdip_info = False
-        for record in self.sdip_info_calc_ids:
-            sdip_info = True
-        if not sdip_info:
-            self.write({'sdip_info_calc_ids':sdip_info_calc_ids})
-
-        sdiv_info = False
-        for record in self.sdiv_info_calc_ids:
-            sdiv_info = True
-        if not sdiv_info:
-            self.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
+        self.write({'sdi_info_calc_ids':key_factor_info})
+        self.write({'sdip_info_calc_ids':sdip_info_calc_ids})
+        self.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
 
         self.employee_id.update({'sueldo_imss':self.sdi})
         amount=0
@@ -612,7 +629,6 @@ class HrPayslip(models.Model):
             if not self.accumlated:
                 self.write({'acumulado_ids':accumulated_info,
                         })
-
 
         self.write({'accumlated':True})
         self.calc_cuotas_obrero_patronal()
@@ -940,6 +956,7 @@ class HrPayslip(models.Model):
 
     def calculate_sdi(self, rule_localdict):
 
+
         def last_day_of_month(date):
             if date.month == 12:
                 return date.replace(day=31)
@@ -1057,6 +1074,7 @@ class HrPayslip(models.Model):
                     bimestre_worked_days += nominab._get_days("WORK100")[0]
                     nomina_bimestral_ids.append(nominab.id)
 
+                print ("XXXXX",bimestre_worked_days)
                 sdiv_info_calc_ids.append(
                     (0, 0, {'name': 'Dias trabajados Bimestre', 'value': bimestre_worked_days}))
 
