@@ -174,6 +174,7 @@ class HrPayslip(models.Model):
         for line in self.worked_days_line_ids:
             if line.code == code:
                 found = True
+                print ("total days",line.number_of_days)
                 dias += line.number_of_days
                 horas += line.number_of_hours
 

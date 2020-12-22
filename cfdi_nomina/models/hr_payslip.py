@@ -422,6 +422,15 @@ class HrPayslip(models.Model):
         days = self.days_in_month(int(payslip.date_from.strftime("%y")), int(payslip.date_from.strftime("%m")))
         return days
 
+    def _get_divas(self, payslip, code):
+        dias = horas = 0
+        for line in payslip.worked_days_line_ids:
+            if line.code == code:
+                print ("total days",line.number_of_days)
+                dias += line.number_of_days
+                horas += line.number_of_hours
+
+
     def compute_sheet(self):
         uma = self.env['ir.config_parameter'].sudo().get_param('cfdi_nomina.UMA')
         self.UMA = uma
@@ -593,16 +602,15 @@ class HrPayslip(models.Model):
             ('registro_patronal_codigo', '=',
              self.company_id.registro_patronal.name),
         ])
-
-        print ("nomina_bimestral::",nomina_bimestral)
-
         if nomina_bimestral:
 
             bimestre_worked_days = 0
             nomina_bimestral_ids = []
 
             for nominab in nomina_bimestral:
+
                 # bimestre_worked_days += self.fetch_days_of_month(nominab)
+
                 bimestre_worked_days += nominab._get_days("WORK100")[0]
                 nomina_bimestral_ids.append(nominab.id)
 
@@ -1095,7 +1103,6 @@ class HrPayslip(models.Model):
                     bimestre_worked_days += nominab._get_days("WORK100")[0]
                     nomina_bimestral_ids.append(nominab.id)
 
-                print ("XXXXX",bimestre_worked_days)
                 sdiv_info_calc_ids.append(
                     (0, 0, {'name': 'Dias trabajados Bimestre', 'value': bimestre_worked_days}))
 
