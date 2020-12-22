@@ -31,17 +31,24 @@ class PaySlipReport(models.AbstractModel):
 
 
     def get_nomina_data(self, o, dato, default=''):
-        nomina = self.comprobante[o.id].get('cfdi:Complemento', {}).get('nomina12:Nomina', {})
-        valor = nomina.get('@{}'.format(dato), default)
-        return valor
+        if self.comprobante:
+            nomina = self.comprobante[o.id].get('cfdi:Complemento', {}).get('nomina12:Nomina', {})
+            valor = nomina.get('@{}'.format(dato), default)
+            return valor
+        else:
+            return 0
 
     def get_comprobante_data(self, o, campo, default=''):
-        valor = self.comprobante[o.id].get('@{}'.format(campo), default)
-        return valor
+        if self.comprobante:
+            valor = self.comprobante[o.id].get('@{}'.format(campo), default)
+            return valor
+        else:
+            return 0
 
     def get_timbre_data(self, o, campo, default=''):
-        valor = self.timbre[o.id].get(campo, default)
-        return valor
+        if self.timbre:
+            valor = self.timbre[o.id].get(campo, default)
+            return valor
 
     def get_faltas(self, o):
         faltas_list = o.worked_days_line_ids.mapped('holiday_ids').filtered(
@@ -143,11 +150,11 @@ class PaySlipReport(models.AbstractModel):
         return lines_p
 
     def get_xmldata(self, docids):
-        self.comprobante = {}
-        self.timbre = {}
+        self.comprobante = dict({})
+        self.timbre = dict({})
         for doc_id in docids:
-            self.timbre[doc_id] = {}
-            self.comprobante[doc_id] = {}
+            self.timbre = dict({doc_id: {}})
+            self.comprobante = dict({doc_id: {}})
             attach_row = self.env['ir.attachment'].search([('res_id', '=', doc_id),
                                                            ('res_model', '=', 'hr.payslip')])
             for atta in attach_row:
@@ -156,8 +163,8 @@ class PaySlipReport(models.AbstractModel):
                     attribute = 'tfd:TimbreFiscalDigital[1]'
                     namespace = {'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'}
                     node = tree.Complemento.xpath(attribute, namespaces=namespace)
-                    self.timbre[doc_id] = node[0] if node else None
-                    self.comprobante[doc_id] = dict(xmltodict.parse(base64.decodebytes(atta.datas)).get('cfdi:Comprobante', {}))
+                    self.timbre = dict({doc_id: node[0] if node else None})
+                    self.comprobante = dict({doc_id: dict(xmltodict.parse(base64.decodebytes(atta.datas)).get('cfdi:Comprobante', {}))})
                     break
         return
 

@@ -568,13 +568,25 @@ class HrPayslip(models.Model):
         str_start_date, str_end_date = tbgrv.acum_calendar_id.get_periodo_anterior(
                 self.date_from)
 
+
+        # nomina_bimestral = self.env['hr.payslip'].search([
+        #     ('employee_id', '=', employee.id),
+        #     ('state', '=', 'done'),
+        #     ('date_from', '>=', str_start_date),
+        #     ('date_to', '<=', str_end_date),
+        # ])
         nomina_bimestral = self.env['hr.payslip'].search([
             ('employee_id', '=', employee.id),
             ('state', '=', 'done'),
             ('date_from', '>=', str_start_date),
             ('date_to', '<=', str_end_date),
-        ], limit=2, order='id desc')
-
+            ('tipo_nomina', '=', 'O'),  # Solo nominas ordinarias
+            '|',
+            ('registro_patronal_codigo', '=',
+             self.company_id.registro_patronal.name),
+            ('registro_patronal_codigo_new', '=',
+             self.company_id.registro_patronal.name),
+        ])
 
         if nomina_bimestral:
 
