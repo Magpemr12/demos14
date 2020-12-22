@@ -559,9 +559,16 @@ class HrPayslip(models.Model):
         employee = self.employee_id
         tabla_id = self.env.ref('cfdi_nomina.hr_taxable_base_id2').id,
         tbgrv = self.env['hr.basegravable.acum'].browse(tabla_id)
+        print ("tbgrv ::",tbgrv)
         if not tbgrv:
             raise UserError(
                 'No hay tabla Base Gravable con id %s' % tabla_id)
+
+
+        # from dateutil import relativedelta
+        # xdate = self.date_from + relativedelta.relativedelta(months=1)
+        # print (xdate, type(xdate))
+
         if not tbgrv.acum_calendar_id:
             raise UserError(
                 'No hay calendario definido para la tabla Base Gravable %s' % tbgrv.name)
@@ -575,18 +582,19 @@ class HrPayslip(models.Model):
         #     ('date_from', '>=', str_start_date),
         #     ('date_to', '<=', str_end_date),
         # ])
+        print ("Start Date::",str_start_date)
+        print ("end::", str_end_date)
         nomina_bimestral = self.env['hr.payslip'].search([
             ('employee_id', '=', employee.id),
             ('state', '=', 'done'),
             ('date_from', '>=', str_start_date),
             ('date_to', '<=', str_end_date),
             ('tipo_nomina', '=', 'O'),  # Solo nominas ordinarias
-            '|',
             ('registro_patronal_codigo', '=',
              self.company_id.registro_patronal.name),
-            ('registro_patronal_codigo_new', '=',
-             self.company_id.registro_patronal.name),
         ])
+
+        print ("nomina_bimestral::",nomina_bimestral)
 
         if nomina_bimestral:
 

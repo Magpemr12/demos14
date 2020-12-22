@@ -272,6 +272,7 @@ class HrCalendar(models.Model):
     def get_periodo_anterior(self, fecha):
         self.ensure_one()
         periodo = self.cal_line_ids.filtered(lambda r: r.fecha_fin < fecha)
+        print ("periodo ::",periodo)
         if not periodo:
             # raise UserError('No se encontró periodo anterior a la fecha %s en calendario %s' % (fecha, self.name))
             return False, False
