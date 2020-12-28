@@ -390,46 +390,11 @@ class HrPayslip(models.Model):
             })
         return input_type
 
-
     @api.depends('sdi_fijo','sdi_var')
     def update_idw(self):
 
         for payslip in self:
             payslip.sdi = payslip.sdi_fijo + payslip.sdi_var
-
-
-    def days_in_month(self, y, m):
-        leap = 0
-        if y % 400 == 0:
-            leap = 1
-        elif y % 100 == 0:
-            leap = 0
-        elif y % 4 == 0:
-            leap = 1
-        if m == 2:
-            return 28 + leap
-        list = [1, 3, 5, 7, 8, 10, 12]
-        if m in list:
-            return 31
-        return 30
-
-
-    def fetch_days_of_month(self, payslip):
-
-        print ("payslip ::::::::",payslip.date_from, type(payslip.date_from))
-        print(payslip.date_from.strftime("%y"))
-        print(payslip.date_from.strftime("%m"))
-        days = self.days_in_month(int(payslip.date_from.strftime("%y")), int(payslip.date_from.strftime("%m")))
-        return days
-
-    def _get_divas(self, payslip, code):
-        dias = horas = 0
-        for line in payslip.worked_days_line_ids:
-            if line.code == code:
-                print ("total days",line.number_of_days)
-                dias += line.number_of_days
-                horas += line.number_of_hours
-
 
     def compute_sheet(self):
         uma = self.env['ir.config_parameter'].sudo().get_param('cfdi_nomina.UMA')
@@ -545,7 +510,7 @@ class HrPayslip(models.Model):
                         ]
 
         self.sdi_fijo = integ_factor * daily_salary
-        self.sdi = self.sdi_fijo + self.sdi_var
+
         salary = 0
         for sal in self.line_ids:
             if sal.code == 'P001' and sal.name == 'SUELDO':
@@ -584,15 +549,6 @@ class HrPayslip(models.Model):
         str_start_date, str_end_date = tbgrv.acum_calendar_id.get_periodo_anterior(
                 self.date_from)
 
-
-        # nomina_bimestral = self.env['hr.payslip'].search([
-        #     ('employee_id', '=', employee.id),
-        #     ('state', '=', 'done'),
-        #     ('date_from', '>=', str_start_date),
-        #     ('date_to', '<=', str_end_date),
-        # ])
-        print ("Start Date::",str_start_date)
-        print ("end::", str_end_date)
         nomina_bimestral = self.env['hr.payslip'].search([
             ('employee_id', '=', employee.id),
             ('state', '=', 'done'),
@@ -606,11 +562,7 @@ class HrPayslip(models.Model):
 
             bimestre_worked_days = 0
             nomina_bimestral_ids = []
-
             for nominab in nomina_bimestral:
-
-                # bimestre_worked_days += self.fetch_days_of_month(nominab)
-
                 bimestre_worked_days += nominab._get_days("WORK100")[0]
                 nomina_bimestral_ids.append(nominab.id)
 
@@ -643,7 +595,7 @@ class HrPayslip(models.Model):
             sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
             self.write({'sdi_var':sdi_var})
 
-
+        self.sdi = self.sdi_fijo + self.sdi_var
         self.write({'sdi_info_calc_ids':key_factor_info})
         self.write({'sdip_info_calc_ids':sdip_info_calc_ids})
         self.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
@@ -1182,7 +1134,7 @@ class HrPayslip(models.Model):
 
             # Se obtienen fecha de la siguiente quincena
             next_quincena = datetime.strptime(
-                self.date_to, DEFAULT_SERVER_DATE_FORMAT) + timedelta(days=15)
+                str(self.date_to), DEFAULT_SERVER_DATE_FORMAT) + timedelta(days=15)
             next_quincena = next_quincena.strftime(DEFAULT_SERVER_DATE_FORMAT)
 
             # Dias Prima Vacacional
@@ -1393,7 +1345,7 @@ class HrPayslip(models.Model):
 
             # Se obtienen fecha de la siguiente quincena
             next_quincena = datetime.strptime(
-                self.date_to, DEFAULT_SERVER_DATE_FORMAT) + timedelta(days=15)
+                str(self.date_to), DEFAULT_SERVER_DATE_FORMAT) + timedelta(days=15)
             next_quincena = next_quincena.strftime(DEFAULT_SERVER_DATE_FORMAT)
 
             # Dias Prima Vacacional

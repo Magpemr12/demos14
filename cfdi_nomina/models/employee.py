@@ -9,6 +9,7 @@ from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMA
 
 class Employee(models.Model):
     _inherit = 'hr.employee'
+
     # _rec_name = "nombre_completo"
 
     @api.depends('appat', 'apmat', 'name')
@@ -77,7 +78,7 @@ class Employee(models.Model):
         anos_servicio = 0
         if self.fecha_alta:
             start_date = datetime.strptime(
-                self.fecha_alta, DEFAULT_SERVER_DATE_FORMAT)
+                str(self.fecha_alta), DEFAULT_SERVER_DATE_FORMAT)
             anos_servicio = relativedelta(end_date, start_date).years
 
         return anos_servicio
@@ -86,9 +87,9 @@ class Employee(models.Model):
         self.ensure_one()
         if self.birthday:
             start_date = datetime.strptime(
-                self.birthday, DEFAULT_SERVER_DATE_FORMAT)
+                str(self.birthday), DEFAULT_SERVER_DATE_FORMAT)
             end_date = datetime.strptime(
-                fields.Datetime.now(), DEFAULT_SERVER_DATETIME_FORMAT)
+                str(fields.Datetime.now()), DEFAULT_SERVER_DATETIME_FORMAT)
             return relativedelta(end_date, start_date).years
 
     # @api.depends('slip_ids.sdi') # Forzar a que se recalcule cada creacion de nomina
@@ -186,10 +187,11 @@ class Employee(models.Model):
     sueldo_imss_bimestre_actual = fields.Float(
         'IMSS integrated salary (current bim)', track_visibility='onchange')
     retiro_parcialidad = fields.Float(
-        'Retreat', help="Daily amount received by the worker for retirement, pension or retirement when the payment is partial")
+        'Retreat',
+        help="Daily amount received by the worker for retirement, pension or retirement when the payment is partial")
     anos_servicio = fields.Integer(
         compute=_get_anos_servicio, string=u"Number of years of service")
-    tarjeta_nomina = fields.Many2one(related="bank_account_id",string='Payroll card number', size=64)
+    tarjeta_nomina = fields.Many2one(related="bank_account_id", string='Payroll card number', size=64)
     # tarjeta_nomina = fields.Char(string='Numero de tarjeta de nomina', size=64)
     ife_anverso = fields.Binary('Front', filters='*.png,*.jpg,*.jpeg')
     ife_reverso = fields.Binary('Back', filters='*.png,*.jpg,*.jpeg')
@@ -226,6 +228,7 @@ class Employee(models.Model):
         res = super(Employee, self).create(vals)
         if res and res.rfc and res.address_home_id and res.address_home_id.vat and \
                 res.address_home_id.vat != res.rfc:
+            print ("inside create =-=-")
             raise UserError(_("The RFC does not match the Partner's RFC!"))
         return res
 
@@ -253,23 +256,22 @@ class Employee(models.Model):
     def write(self, vals):
         for employee in self:
             if 'fecha_alta' in vals:
-                    if employee.fecha_alta != vals['fecha_alta']:
-                        employee.message_post(body=_(
-                            'Se actualizo la fecha de alta de %s a %s') % (
-                                employee.fecha_alta, vals['fecha_alta']
-                        ))
-            if 'fecha_baja' in vals:                
-                    if employee.fecha_baja != vals['fecha_baja']:
-                        employee.message_post(body=_(
-                            'Se cambió la fecha de baja de %s a %s') % (
-                            employee.fecha_baja, vals[
-                                'fecha_baja']
-                        ))
+                if employee.fecha_alta != vals['fecha_alta']:
+                    employee.message_post(body=_(
+                        'Se actualizo la fecha de alta de %s a %s') % (
+                                                   employee.fecha_alta, vals['fecha_alta']
+                                               ))
+            if 'fecha_baja' in vals:
+                if employee.fecha_baja != vals['fecha_baja']:
+                    employee.message_post(body=_(
+                        'Se cambió la fecha de baja de %s a %s') % (
+                                                   employee.fecha_baja, vals[
+                                                       'fecha_baja']
+                                               ))
 
-            if employee.rfc and employee.address_home_id and employee.address_home_id.vat and \
-                    employee.address_home_id.vat != employee.rfc:
-                    raise UserError(_("The RFC does not match the Partner's RFC!"))
-
+            if vals.get('rfc') and employee.address_home_id and employee.address_home_id.vat and \
+                    employee.address_home_id.vat != vals.get('rfc'):
+                raise UserError(_("The RFC does not match the Partner's RFC!"))
 
             if vals.get('sueldo_imss'):
                 if self.sueldo_imss != vals.get('sueldo_imss'):
@@ -279,7 +281,7 @@ class Employee(models.Model):
                         'sueldo_new': vals.get('sueldo_imss'),
                         'user_id': self.env.uid
                     })])
-           
+
         return super(Employee, self).write(vals)
 
 
@@ -331,7 +333,6 @@ class HrApplicant(models.Model):
     appat = fields.Char("Father's surname", )
     apmat = fields.Char("Mother's surname", )
 
-
     def create_employee_from_applicant(self):
         """ Create an hr.employee from the hr.applicants """
         employee = False
@@ -367,13 +368,13 @@ class HrApplicant(models.Model):
                     'address_home_id': address_id,
                     'default_department_id': applicant.department_id.id or False,
                     'default_address_id': applicant.company_id and applicant.company_id.partner_id
-                    and applicant.company_id.partner_id.id or False,
+                                          and applicant.company_id.partner_id.id or False,
                     'default_work_email': applicant.department_id and applicant.department_id.company_id
-                    and applicant.department_id.company_id.email or False,
+                                          and applicant.department_id.company_id.email or False,
                     'default_work_phone': applicant.department_id.company_id.phone,
                     'form_view_initial_mode': 'edit',
                     'default_applicant_id': applicant.ids,
-                    }
+                }
 
         dict_act_window = self.env['ir.actions.act_window']._for_xml_id('hr.open_view_employee_list')
         dict_act_window['context'] = employee_data

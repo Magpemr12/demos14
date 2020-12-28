@@ -5,6 +5,7 @@ import pytz
 import re
 from ast import literal_eval
 import logging
+
 _logger = logging.getLogger(__name__)
 from odoo import api, models, fields, _
 from odoo.tools.safe_eval import safe_eval
@@ -24,9 +25,11 @@ def datetime_to_string(dt):
     """ Convert the given datetime (converted in UTC) to a string value. """
     return fields.Datetime.to_string(dt.astimezone(utc))
 
+
 def string_to_datetime(value):
     """ Convert the given string value to a datetime in UTC. """
     return utc.localize(fields.Datetime.from_string(value))
+
 
 def _boundaries(intervals, opening, closing):
     """ Iterate on the boundaries of intervals. """
@@ -41,6 +44,7 @@ class Intervals(object):
         Each interval is a triple ``(start, stop, records)``, where ``records``
         is a recordset.
     """
+
     def __init__(self, intervals=()):
         self._items = []
         if intervals:
@@ -91,9 +95,9 @@ class Intervals(object):
         bounds1 = _boundaries(self, 'start', 'stop')
         bounds2 = _boundaries(other, 'switch', 'switch')
 
-        start = None                    # set by start/stop
-        recs1 = None                    # set by start
-        enabled = difference            # changed by switch
+        start = None  # set by start/stop
+        recs1 = None  # set by start
+        enabled = difference  # changed by switch
         for value, flag, recs in sorted(chain(bounds1, bounds2)):
             if flag == 'start':
                 start = value
@@ -112,7 +116,6 @@ class Intervals(object):
         return result
 
 
-
 class HrSalaryRuleGroup(models.Model):
     _name = "hr.salary.rule.group"
 
@@ -122,10 +125,10 @@ class HrSalaryRuleGroup(models.Model):
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule"
 
-    tipo_id = fields.Many2one("cfdi_nomina.tipo",string="Type")
+    tipo_id = fields.Many2one("cfdi_nomina.tipo", string="Type")
     tipo_de_percepcion = fields.Selection([
         ('fijo', 'Fijo'),
-        ('variable', 'Variable')],string="Type Of Perception",required=True)
+        ('variable', 'Variable')], string="Type Of Perception", required=True)
 
     tipo_horas = fields.Many2one(
         "cfdi_nomina.tipo_horas", string="Type of overtime")
@@ -150,13 +153,13 @@ class HRSalaryRule(models.Model):
     gravado_o_exento_ptu = fields.Selection(GRAVADO_EXENTO_SEL, string="Taxed or Exempt", required=True,
                                             default='ninguno',
                                             help='Gravado para PTU. '
-                                            'Generates <code>_GRV_LOCAL and TOTAL_GRV_LOCAL variables')
+                                                 'Generates <code>_GRV_LOCAL and TOTAL_GRV_LOCAL variables')
     amount_python_compute2_ptu = fields.Text(string='Partial Python Code',
                                              help="Previous calculation code, for the taxed or exempt amount.")
     gravado_o_exento_local = fields.Selection(GRAVADO_EXENTO_SEL, string="Taxed or Exempt", required=True,
                                               default='ninguno',
                                               help='Local Taxation. '
-                                              'Generates <code>_GRV_LOCAL and TOTAL_GRV_LOCAL variables')
+                                                   'Generates <code>_GRV_LOCAL and TOTAL_GRV_LOCAL variables')
     amount_python_compute2_local = fields.Text(string='Partial Python Code',
                                                help="Previous calculation code, for the taxed or exempt amount.")
 
@@ -165,26 +168,28 @@ class HRSalaryRule(models.Model):
     acum_calendar_id = fields.Many2one('hr.calendar.acum', string='Calendar', required=False,
                                        help='Calendar for accumulated in payroll.')
     input_ids = fields.One2many(
-        'hr.rule.input', 'input_id', string='Inputs', copy=True,store=True)
+        'hr.rule.input', 'input_id', string='Inputs', copy=True, store=True)
 
-    company_id = fields.Many2one('res.company',string="Company")
+    company_id = fields.Many2one('res.company', string="Company")
     policy_level = fields.Selection([
-        ('summary','Summary'),
-        ('detail','Detail'),
-        ],default="summary",string="Policy level of detail")
+        ('summary', 'Summary'),
+        ('detail', 'Detail'),
+    ], default="summary", string="Policy level of detail")
 
-    tax_id = fields.Many2many('account.tax',string="Tax")
-    payslip_id = fields.Many2one('hr.payslip',string="Payslip")
+    tax_id = fields.Many2many('account.tax', string="Tax")
+    payslip_id = fields.Many2one('hr.payslip', string="Payslip")
     total = fields.Float(string="Total")
-    x_studio_field_wtn56 = fields.Integer(string="New Campo relacionado",help="The sequence field is used to define order in which the tax lines are applied.")
-    parent_rule_id = fields.Many2one('hr.salary.rule',string="Parent Salary Rule",)
+    x_studio_field_wtn56 = fields.Integer(string="New Campo relacionado",
+                                          help="The sequence field is used to define order in which the tax lines are applied.")
+    parent_rule_id = fields.Many2one('hr.salary.rule', string="Parent Salary Rule", )
     display_name = fields.Char(string="Display Name")
-    x_studio_field_wsgyf = fields.Integer(string="New Related Field",help="The sequence field is used to define order in which the tax lines are applied.")
-    account_tax_id = fields.Many2one('account.tax',string="Tax")
+    x_studio_field_wsgyf = fields.Integer(string="New Related Field",
+                                          help="The sequence field is used to define order in which the tax lines are applied.")
+    account_tax_id = fields.Many2one('account.tax', string="Tax")
     x_nivel_poliza = fields.Selection([
-        ('summary','Summary'),
-        ],string="Policy detail level")
-    child_ids = fields.One2many('hr.salary.rule','parent_rule_id',string="Child Salary Rule",store=True)
+        ('summary', 'Summary'),
+    ], string="Policy detail level")
+    child_ids = fields.One2many('hr.salary.rule', 'parent_rule_id', string="Child Salary Rule", store=True)
 
     @api.model
     def _set_global_values(self, localdict):
@@ -320,8 +325,8 @@ class HRSalaryRule(models.Model):
         # A la primera deducción se calcula el SDI, SUBE en base al total
         # gravado IMSS al momento
 
-        #At the first deduction, the SDI is calculated, 
-        #it goes up based on the total taxed IMSS at the time
+        # At the first deduction, the SDI is calculated,
+        # it goes up based on the total taxed IMSS at the time
         if not localdict.get('SDI') and self.tipo_id.id == self.env.ref('cfdi_nomina.catalogo_tipo_deduccion').id:
             ICPSudo = self.env['ir.config_parameter'].sudo()
 
@@ -342,7 +347,7 @@ class HRSalaryRule(models.Model):
                 localdict['TOTAL_GRV_ISR_MENSUAL'] = localdict.get(
                     'TOTAL_GRV_ISR_NC', 0)
 
-            if payslip.tipo_calculo in ['ajustado',  'anual']:
+            if payslip.tipo_calculo in ['ajustado', 'anual']:
                 localdict['FPER'] = 0
 
             tabla_sube_id = literal_eval(ICPSudo.get_param(
@@ -352,9 +357,9 @@ class HRSalaryRule(models.Model):
 
             if payslip.tipo_calculo == 'anual':
                 localdict['ISPT'] = self.env['hr.ispt'].get_valor(localdict['TOTAL_GRV_ISR_MENSUAL'],
-                                                                        tabla_isr_id)
+                                                                  tabla_isr_id)
                 localdict['SUBE'] = self.env['hr.employment.sube'].get_valor(localdict['TOTAL_GRV_ISR_MENSUAL'],
-                                                                        tabla_sube_id)
+                                                                             tabla_sube_id)
                 # Registrar valores del Subsidio y Subsidio acumulado
                 payslip.save_subsidio(localdict)
                 payslip.save_ispt(localdict)
@@ -363,9 +368,9 @@ class HRSalaryRule(models.Model):
 
             else:
                 localdict['ISPT'] = self.env['hr.ispt'].get_valor(localdict['TOTAL_GRV_ISR_MENSUAL'],
-                                                                        tabla_isr_id)
+                                                                  tabla_isr_id)
                 localdict['SUBE'] = self.env['hr.employment.sube'].get_valor(localdict['TOTAL_GRV_ISR_MENSUAL'],
-                                                                        tabla_sube_id)
+                                                                             tabla_sube_id)
 
                 # Registrar valores del Subsidio y Subsidio acumulado
                 payslip.save_subsidio(localdict)
@@ -373,7 +378,6 @@ class HRSalaryRule(models.Model):
                 payslip.calculo_anual = None
 
     def calculo_anual(self, localdict, payslip):
-
         ICPSudo = self.env['ir.config_parameter'].sudo()
         tabla_isr_id = literal_eval(ICPSudo.get_param(
             'cfdi_nomina.NominaIPSTAnualID') or 'None')
@@ -388,8 +392,8 @@ class HRSalaryRule(models.Model):
         factor_anual = localdict.get('DA') / dias_transcurridos
 
         total_gravado_anual = localdict['TOTAL_GRV_ISR_AN'] + \
-            localdict['TOTAL_GRV_ISR_NC'] - \
-            localdict['TOTAL_GRV_ISR_AC']
+                              localdict['TOTAL_GRV_ISR_NC'] - \
+                              localdict['TOTAL_GRV_ISR_AC']
 
         gravable_anual = factor_anual * total_gravado_anual
 
@@ -418,23 +422,23 @@ class HRSalaryRule(models.Model):
         calculo_anual = """
         <table>
         <tr><td style="padding: 15px;">
-        
+
         <table>
         <tr><th colspan='2'>Factor de anualizacion</th></tr>
         <tr><td>Dias del año</td><td style="text-align: right;">&nbsp;{da:,.4f}</td></tr>
         <tr><td>/Dias transcurridos</td><td style="text-align: right;">&nbsp;{dt:,.4f}</td></tr>
         <tr><td>=Factor anual</td><td style="text-align: right;">&nbsp;{fa:,.4f}</td></tr>
-        
+
         <tr><th colspan='2'>Base gravable anual</th></tr>
         <tr><td>Gravable acumulado</td><td style="text-align: right;">&nbsp;{gravacum:,.4f}</td></tr>
         <tr><td>*Factor anual</td><td style="text-align: right;">&nbsp;{fa:,.4f}</td></tr>
         <tr><td>=Gravable anual</td><td style="text-align: right;">&nbsp;{gravanual:,.4f}</td></tr>
-        
+
         <tr><th colspan='2'>Impuesto determinado (art 177)</th></tr>
         <tr><td>Impuesto determinado (art 177)</td><td style="text-align: right;">&nbsp;{ispt_tabla:,.4f}</td></tr>
         <tr><td>/Factor anual</td><td style="text-align: right;">&nbsp;{fa:,.4f}</td></tr>
         <tr><td>=Imp. del Gravable acumulado</td><td style="text-align: right;">&nbsp;{impuesto_del_gravable_acumulado:,.4f}</td></tr>
-        
+
         <tr><th colspan='2'>I.S.R. de la nomina</th></tr>
         <tr><td>Imp. del Gravable acumulado</td><td style="text-align: right;">&nbsp;{impuesto_del_gravable_acumulado:,.4f}</td></tr>
         <tr><td>-Subs. Empleo acumulado</td><td style="text-align: right;">&nbsp;{sube_acumulado:,.4f}</td></tr>
@@ -442,14 +446,14 @@ class HRSalaryRule(models.Model):
         <tr><td>-ISR acumualdo</td><td style="text-align: right;">&nbsp;{isr_acumulado:,.4f}</td></tr>
         <tr><td>=ISR de la nomina</td><td style="text-align: right;">&nbsp;{ispt:,.4f}</td></tr>
         </table>
-        
+
         </td><td style="padding: 15px;">
-        
+
         <table>
         <tr><th colspan='2'>Subsidio para el empleo acumulado</th></tr>
         <tr><td>Subsidio para el empleo acumulado</td><td style="text-align: right;">&nbsp;{sube_acumulado:,.4f}</td></tr>
         </table>
-        
+
         </td></tr>
         </table>
         """.format(
@@ -486,7 +490,7 @@ class HRSalaryRule(models.Model):
             # ('tipo_calculo', 'in', ['mensual', 'ajustado']),
         ], order='date_from ASC')
 
-        periodo_payslips += payslip   # Incluir nomina actual que aún no esta confirmada
+        periodo_payslips += payslip  # Incluir nomina actual que aún no esta confirmada
 
         sube_acumulado = sum(periodo_payslips.mapped('subsidio_causado'))
 
@@ -722,7 +726,7 @@ class HRSalaryRule(models.Model):
                 if localdict.get('result', None) is None:  # JGO
                     raise UserError(_('No hay variable "result"'))
                 return float(localdict['result']), 'result_qty' in localdict and localdict['result_qty'] \
-                    or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
+                       or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
             except Exception as e:  # JGO
                 raise UserError(_('Codigo python incorrecto en Regla salarial:%s (%s)[Partial],\n%s\n%s.') % (
                     self.name, self.code, amount_python_compute, e))
@@ -771,14 +775,15 @@ class HRSalaryRule(models.Model):
             except:
                 raise ValidationError(_(
                     'Wrong quantity defined for salary rule %s (%s).') % (
-                        rule.name, rule.code))
+                                          rule.name, rule.code))
         elif rule.amount_select == 'percentage':
             try:
-                return safe_eval(rule.amount_percentage_base, localdict), eval(rule.quantity, localdict), rule.amount_percentage
+                return safe_eval(rule.amount_percentage_base, localdict), eval(rule.quantity,
+                                                                               localdict), rule.amount_percentage
             except:
                 raise ValidationError(_(
                     'Wrong percentage base or quantity defined for salary rule %s (%s).') % (
-                        rule.name, rule.code))
+                                          rule.name, rule.code))
         try:
             localdict.update({
                 'gravado': 0.0,
@@ -794,7 +799,8 @@ class HRSalaryRule(models.Model):
             context.setdefault('cfdi_nomina', {})[rule_id] = cfdi_nomina
             if localdict.get('result', None) is None:  # JGO
                 raise UserError(_('No hay variable "result"'))
-            return localdict['result'], 'result_qty' in localdict and localdict['result_qty'] or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
+            return localdict['result'], 'result_qty' in localdict and localdict[
+                'result_qty'] or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
         except Exception as e:  # JGO
             raise UserError(_('Codigo python incorrecto en Regla salarial:%s, %s,\n%s\n%s.') % (
                 rule.name, rule.code, rule.amount_python_compute, e))
@@ -811,14 +817,14 @@ class HrContract(models.Model):
     monthly_wage = fields.Monetary(
         'Sueldo Mensual', digits=(16, 2), help='For printed contract')
     planned_payment = fields.Selection([
-        ('monthly','Mensual'),
-        ('quarterly','Trimestral'),
-        ('semiannually','Semestralmente'),
-        ('annually','Anualmente'),
-        ('weekly','Semanalmente'),
-        ('biweekly','Bisemanal'),
-        ('bimonthly','Bimensual'),
-        ],default="monthly",string="Planned payment")
+        ('monthly', 'Mensual'),
+        ('quarterly', 'Trimestral'),
+        ('semiannually', 'Semestralmente'),
+        ('annually', 'Anualmente'),
+        ('weekly', 'Semanalmente'),
+        ('biweekly', 'Bisemanal'),
+        ('bimonthly', 'Bimensual'),
+    ], default="monthly", string="Planned payment")
     salary_journal = fields.Many2one(
         'account.journal', 'Salary diary', required=True)
 
@@ -828,9 +834,9 @@ class HrJob(models.Model):
 
     template = fields.Integer(help='Total of employees authorized to this job')
     xs_tipo_grupo_poliza = fields.Selection(selection=[
-            ('administracion', 'Administracion'),
-            ('ventas', 'Ventas'),
-        ], string='Job Type',store=True ,default="administracion")
+        ('administracion', 'Administracion'),
+        ('ventas', 'Ventas'),
+    ], string='Job Type', store=True, default="administracion")
 
 
 def to_tz(datetime, tz_name):
@@ -843,11 +849,10 @@ class ResourceCalendar(models.Model):
 
     omit_attendance = fields.Boolean(
         help='If this is True do not will be created absences to the '
-        'employees with this calendar')
+             'employees with this calendar')
     tolerance = fields.Integer(
         help='Indicate the tolerance to check in the  attendance')
 
-    
     def _leave_intervals_batch(self, start_dt, end_dt, resources=None, domain=None, tz=None):
         """ Return the leave intervals in the given datetime range.
             The returned intervals are expressed in specified tz or in the calendar's timezone.
@@ -874,8 +879,8 @@ class ResourceCalendar(models.Model):
         leaves = self.env['resource.calendar.leaves']
         for leave in self.env['resource.calendar.leaves'].search(domain):
             for resource in resources_list:
-                
-                if leave.holiday_id and leave.holiday_id.holiday_status_id and\
+
+                if leave.holiday_id and leave.holiday_id.holiday_status_id and \
                         leave.holiday_id.holiday_status_id.afecta_imss in ['ausentismo', 'incapacidad']:
                     leaves += leave
 
