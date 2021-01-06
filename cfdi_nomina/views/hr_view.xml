@@ -50,13 +50,15 @@
                             <field name="gravado_o_exento"/>
                             <field name="amount_python_compute2"
                                    placeholder="Ejemplo: result = inputs.P002.amount / 2"
-                                   attrs="{'invisible':[('gravado_o_exento', 'not in', ('p_gravado', 'p_exento'))]}"/>
+                                   attrs="{'invisible':[('gravado_o_exento', 'not in', ('p_gravado', 'p_exento'))],
+                                   'required':[('gravado_o_exento', 'in', ('p_gravado', 'p_exento'))]}"/>
                         </group>
                         <group string="INFONAVIT">
                             <field name="gravado_o_exento_infonavit"/>
                             <field name="amount_python_compute2_infonavit"
                                    placeholder="Ejemplo: result = inputs.P002.amount / 2"
-                                   attrs="{'invisible':[('gravado_o_exento_infonavit', 'not in', ('p_gravado', 'p_exento'))]}"/>
+                                   attrs="{'invisible':[('gravado_o_exento_infonavit', 'not in', ('p_gravado', 'p_exento'))],
+                                   'required':[('gravado_o_exento_infonavit', 'in', ('p_gravado', 'p_exento'))]}"/>
                         </group>
                     </group>
                     <group>
@@ -64,19 +66,22 @@
                             <field name="gravado_o_exento_imss"/>
                             <field name="amount_python_compute2_imss"
                                    placeholder="Ejemplo: result = inputs.P002.amount / 2"
-                                   attrs="{'invisible':[('gravado_o_exento_imss', 'not in', ('p_gravado', 'p_exento'))]}"/>
+                                   attrs="{'invisible':[('gravado_o_exento_imss', 'not in', ('p_gravado', 'p_exento'))],
+                                   'required':[('gravado_o_exento_imss', 'in', ('p_gravado', 'p_exento'))]}"/>
                         </group>
                         <group string="PTU">
                             <field name="gravado_o_exento_ptu"/>
                             <field name="amount_python_compute2_ptu"
                                    placeholder="Ejemplo: result = inputs.P002.amount / 2"
-                                   attrs="{'invisible':[('gravado_o_exento_ptu', 'not in', ('p_gravado', 'p_exento'))]}"/>
+                                   attrs="{'invisible':[('gravado_o_exento_ptu', 'not in', ('p_gravado', 'p_exento'))],
+                                   'required':[('gravado_o_exento_ptu', 'in', ('p_gravado', 'p_exento'))]}"/>
                         </group>
                         <group string="Local">
                             <field name="gravado_o_exento_local"/>
                             <field name="amount_python_compute2_local"
                                    placeholder="Ejemplo: result = inputs.P002.amount / 2"
-                                   attrs="{'invisible':[('gravado_o_exento_ptu', 'not in', ('p_gravado', 'p_exento'))]}"/>
+                                   attrs="{'invisible':[('gravado_o_exento_ptu', 'not in', ('p_gravado', 'p_exento'))],
+                                   'required':[('gravado_o_exento_ptu', 'in', ('p_gravado', 'p_exento'))]}"/>
                         </group>
                     </group>
                 </page>

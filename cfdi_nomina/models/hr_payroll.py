@@ -38,10 +38,9 @@ class HrPayslipEmployees(models.TransientModel):
         work_entries = self.env['hr.work.entry'].search([
             ('date_start', '<=', payslip_run.date_end),
             ('date_stop', '>=', payslip_run.date_start),
-            ('employee_id', 'in', self.employee_ids.ids),
+            ('employee_id', 'in', self.employee_ids.ids)
         ])
         self._check_undefined_slots(work_entries, payslip_run)
-
         if (self.structure_id.type_id.default_struct_id == self.structure_id):
             work_entries = work_entries.filtered(lambda work_entry: work_entry.state != 'validated')
             if work_entries._check_if_error():
@@ -51,7 +50,6 @@ class HrPayslipEmployees(models.TransientModel):
             'date_start', 'date_end', 'credit_note',
             'tipo_calculo', 'date_from', 'date_to',
             'fecha_pago', 'struct_id'])
-        print("Dfdfdsfdsfsdfsd", run_data)
         tipo_calculo = run_data[0].get('tipo_calculo')
         fecha_pago = run_data[0].get('fecha_pago')
         day_leave_from = payslip_run.date_start

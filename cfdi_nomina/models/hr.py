@@ -121,6 +121,56 @@ class HrSalaryRuleGroup(models.Model):
 
     name = fields.Char(required=True)
 
+class HrWorkEntry(models.Model):
+    _inherit = 'hr.work.entry'
+
+    @api.model
+    def _mark_conflicting_work_entries(self, start, stop):
+        """
+        Set `state` to `conflict` for overlapping work entries
+        between two dates.
+        Return True if overlapping work entries were detected.
+        """
+        # Use the postgresql range type `tsrange` which is a range of timestamp
+        # It supports the intersection operator (&&) useful to detect overlap.
+        # use '()' to exlude the lower and upper bounds of the range.
+        # Filter on date_start and date_stop (both indexed) in the EXISTS clause to
+        # limit the resulting set size and fasten the query.
+        self.flush(['date_start', 'date_stop', 'employee_id', 'active'])
+        query = """
+            SELECT b1.id
+            FROM hr_work_entry b1
+            WHERE
+            b1.date_start <= %s
+            AND b1.date_stop >= %s
+            AND active = TRUE
+            AND EXISTS (
+                SELECT 1
+                FROM hr_work_entry b2
+                WHERE
+                    b2.date_start <= %s
+                    AND b2.date_stop >= %s
+                    AND active = TRUE
+                    AND tsrange(b1.date_start, b1.date_stop, '()') && tsrange(b2.date_start, b2.date_stop, '()')
+                    AND b1.id <> b2.id
+                    AND b1.employee_id = b2.employee_id
+            );
+        """
+        self.env.cr.execute(query, (stop, start, stop, start))
+        conflicts = [res.get('id') for res in self.env.cr.dictfetchall()]
+        self.browse(conflicts).sudo().write({
+            'state': 'conflict',
+        })
+        return bool(conflicts)
+
+    def _check_if_error(self):
+        if not self:
+            return False
+        undefined_type = self.sudo().filtered(lambda b: not b.work_entry_type_id)
+        undefined_type.write({'state': 'conflict'})
+        conflict = self._mark_conflicting_work_entries(min(self.mapped('date_start')), max(self.mapped('date_stop')))
+        return undefined_type or conflict
+
 
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule"
