@@ -757,6 +757,71 @@
                                 correspondiente junta de
                                 conciliación y arbitraje.
                             </p>
+                            <br/>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>Nombre</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>Parentesco</p>
+                                </div>
+                                <div class="col-2 ">
+                                    <p>Porcentaje</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>___________________________________________________</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>_______________________________</p>
+                                </div>
+                                <div class="col-2">
+                                    <p>_________%</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>___________________________________________________</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>_______________________________</p>
+                                </div>
+                                <div class="col-2">
+                                    <p>_________%</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>___________________________________________________</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>_______________________________</p>
+                                </div>
+                                <div class="col-2">
+                                    <p>_________%</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>___________________________________________________</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>_______________________________</p>
+                                </div>
+                                <div class="col-2">
+                                    <p>_________%</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-10 text-right">
+                                    <p>Total</p>
+                                </div>
+                                <div class="col-2 text-center">
+                                    <p>100 %</p>
+                                </div>
+                            </div>
+                            <br/>
                             <p>El presente contrato se extiende y firma por duplicado en la ciudad de Boca del Río,
                                 Veracruz; el día
                                 <strong>
