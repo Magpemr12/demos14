@@ -75,7 +75,94 @@
                         <t t-set="total_lines_d_list" t-value="[]"/>
                         <t t-set="totales_list" t-value="[]"/>
 
-
+                        <table width="100%">
+                            <tr>
+                                <td width="12%" style="border-top: solid 1px #034e7f;border-left:  solid 1px #034e7f">
+                                    <strong>Clave</strong>
+                                </td>
+                                <td width="17%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Nombre Trabajador</strong>
+                                </td>
+                                <td width="18%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Dias trabajados</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>F.Pago</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Sueldo</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Otras percep.</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Total perc.</strong>
+                                </td>
+                                <td width="18%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Neto pag.</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f;border-right:  solid 1px #034e7f">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border-left: solid 1px #034e7f;">
+                                    <strong>Total en especie</strong>
+                                </td>
+                                <td>
+                                    <strong>Salario por hora</strong>
+                                </td>
+                                <td>
+                                    <strong>Total IMSS</strong>
+                                </td>
+                                <td>
+                                    <strong>Hrs x dia</strong>
+                                </td>
+                                <td>
+                                    <strong>Total ISR</strong>
+                                </td>
+                                <td>
+                                    <strong>Subs.Empl.</strong>
+                                </td>
+                                <td>
+                                    <strong>Otras ded.</strong>
+                                </td>
+                                <td>
+                                    <strong>Total ded.</strong>
+                                </td>
+                                <td style="border-right: solid 1px #034e7f;">
+                                    <strong>T.Efectivo</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border-left: solid 1px #034e7f;border-bottom: solid 1px #034e7f;">
+                                    <strong>N.S.S.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>RFC</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>CURP</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Sal.Diario</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>S.D.I.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>D.Jornada</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Fecha Alta</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Tip.salario</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;border-right: solid 1px #034e7f;">
+                                    <strong>U.T.Laborales</strong>
+                                </td>
+                            </tr>
+                        </table>
                         <!--Datos-->
                         <t t-foreach="data['payslips']" t-as="p">
                             <t t-set="val" t-value="calc_reglas_lines(p)"/>
@@ -88,195 +175,107 @@
                             <t t-set="t_gravable" t-value="val.get('t_gravable')"/>
                             <t t-set="t_subsidio" t-value="val.get('t_subsidio')"/>
                             <t t-set="t_especie" t-value="val.get('t_especie')"/>
-                            <div class="row space_line tb_nomina">
-                                <div class="row" style="text-align:left">
-                                    <div class="col-1">
-                                        <strong>Clave</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <strong>Nombre Trabajador</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>Dias trabajados</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>F.Pago</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Sueldo</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>Otras percep.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Total perc.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Neto pag.</strong>
-                                    </div>
-                                </div>
-                                <div class="row" style="text-align:left">
-                                    <div class="col-2">
-                                        <strong>Total en especie</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>Salario por hora</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>Total IMSS</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Hrs x dia</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Total ISR</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Subs.Empl.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Otras ded.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Total ded.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>T.Efectivo</strong>
-                                    </div>
-                                </div>
-                                <div class="row" style="text-align:left">
-                                    <div class="col-1">
-                                        <strong>N.S.S.</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>RFC</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>CURP</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Sal.Diario</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>S.D.I.</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>D.Jornada</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Fecha Alta</strong>
-                                    </div>
-                                    <div class="col-1">
-                                        <strong>Tip.salario</strong>
-                                    </div>
-                                    <div class="col-2">
-                                        <strong>U.T.Laborales</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row tb_nomina">
-                                <div class="row" style="text-align:left">
-                                    <div class="col-1">
+                            <table width="100%">
+                                <tr>
+                                    <td width="12%">
                                         <span t-field="p.employee_id.cod_emp"/>
-                                    </div>
-                                    <div class="col-3">
+                                    </td>
+                                    <td width="17%">
                                         <span t-field="p.employee_id"/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td width="18%">
                                         <span t-esc="val.get('dias_trabajados')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td width="10%">
                                         <span t-esc="p.employee_id.tipo_cuenta"/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td width="10%">
                                         <span t-esc="val.get('total_sueldo')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td width="10%">
                                         <span t-esc="val.get('otras_p')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td width="10%">
                                         <span t-esc="val.get('total_p')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td width="18%">
                                         <span t-esc="val.get('total_p') + val.get('total_o') - val.get('total_d')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                </div>
-                                <div class="row" style="text-align:left">
-                                    <div class="col-2">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
                                         <span t-esc="val.get('total_especie')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_sueldo')/val.get('horas_trabajados') if val.get('horas_trabajados') else 0"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_imss')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('horas_trabajados')/val.get('dias_trabajados') if val.get('dias_trabajados') else 0"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_isr')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_subsidio_empleo')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('otras_d')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_d')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-esc="val.get('total_p') + val.get('total_o') - val.get('total_especie') - val.get('total_d')"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                </div>
-                                <div class="row" style="text-align:left">
-                                    <div class="col-1">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
                                         <span t-field="p.employee_id.imss"/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.rfc"/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.curp"/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.sueldo_diario"
                                               t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-field="p.sdi" t-options='{"widget": "float", "precision": 2}'/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.tipo_jornada"/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.fecha_alta"/>
-                                    </div>
-                                    <div class="col-1">
+                                    </td>
+                                    <td>
                                         <span t-field="p.employee_id.tipo_sueldo"/>
-                                    </div>
-                                    <div class="col-2">
+                                    </td>
+                                    <td>
                                         <span>Día</span>
-                                    </div>
-                                </div>
-                            </div>
-
-
+                                    </td>
+                                </tr>
+                            </table>
                             <div class="row head-blue-med tb_nomina">
                                 <div class="col-6">
                                     <span>PERCEPCIONES</span>
@@ -384,7 +383,8 @@
                                 </div>
                             </div>
                             <div class="row space_line"/>
-                            <br /><br/>
+                            <br/>
+                            <br/>
                         </t>
 
 
@@ -597,6 +597,19 @@
         </t>
     </template>
 
+    <record id="paperformat_report_prenominas" model="report.paperformat">
+        <field name="name">PreNominas</field>
+        <field name="default" eval="True"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">35</field>
+        <field name="margin_bottom">2</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
 
     <record id="action_reporte_prenominas" model="ir.actions.report">
         <field name="name">PreNominas</field>
@@ -606,6 +619,7 @@
         <field name="report_file">cfdi_nomina.reporte_pre_nominas</field>
         <field name="print_report_name">'PreNominas-%s' % (object.name).replace('/', '')</field>
         <field name="binding_model_id" ref="model_hr_payslip"/>
+        <field name="paperformat_id" ref="cfdi_nomina.paperformat_report_prenominas"/>
         <field name="binding_type">report</field>
     </record>
 </odoo>

@@ -58,249 +58,287 @@
                         </div>
                         <div class="row space"/>
                         <!--Encabezado Datos-->
-                        <div class="row space_line tb_nomina">
-                            <table class="table">
+                        <!--                        <div class="row space_line tb_nomina">-->
+                        <table width="100%">
+                            <tr>
+                                <td style="border-top: solid 1px #034e7f;border-left:  solid 1px #034e7f" colspan="2">
+                                    <strong>Fecha</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f" colspan="2">
+                                    <strong>N.S.S.</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f" colspan="2">
+                                    <strong>Cve</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f" colspan="2">
+                                    <strong>Nombre Trabajador</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f" colspan="2">
+                                    <strong>RFC</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f;border-right: solid 1px #034e7f" colspan="2">
+                                    <strong>CURP</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;font-size:14px;border-left: solid 1px #034e7f;
+                                    border-right: solid 1px #034e7f" colspan="12">
+                                    <strong>Enfermedades y Maternidad</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border-bottom: solid 1px #034e7f;border-left: solid 1px #034e7f">
+                                    <strong>Días</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Inc.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Aus.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>SDI</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>C.F.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Exc.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>P.D.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>G.M.P.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>R.T.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>I.V.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>G.P.S.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;border-right: solid 1px #034e7f;">
+                                    <strong>Suma</strong>
+                                </td>
+                            </tr>
+                            <t t-set="t_sdi" t-value="0"/>
+                            <t t-set="t_inc" t-value="0"/>
+                            <t t-set="t_aus" t-value="0"/>
+                            <t t-set="t_pe" t-value="0"/>
+                            <t t-set="t_ae3" t-value="0"/>
+                            <t t-set="t_ed" t-value="0"/>
+                            <t t-set="t_gmp" t-value="0"/>
+                            <t t-set="t_iv" t-value="0"/>
+                            <t t-set="t_rt" t-value="0"/>
+                            <t t-set="t_gua" t-value="0"/>
+                            <t t-set="t_total" t-value="0"/>
+                            <t t-foreach="data['payslips']" t-as="p">
+                                <t t-set="val" t-value="calc_val(p)"/>
+                                <t t-set="t_sdi" t-value="t_sdi + val.get('t_sdi')"/>
+                                <t t-set="t_inc" t-value="t_sdi + val.get('t_inc')"/>
+                                <t t-set="t_aus" t-value="t_sdi + val.get('t_aus')"/>
+                                <t t-set="t_pe" t-value="t_sdi + val.get('t_pe')"/>
+                                <t t-set="t_ae3" t-value="t_sdi + val.get('t_ae3')"/>
+                                <t t-set="t_ed" t-value="t_sdi + val.get('t_ed')"/>
+                                <t t-set="t_gmp" t-value="t_sdi + val.get('t_gmp')"/>
+                                <t t-set="t_iv" t-value="t_sdi + val.get('t_iv')"/>
+                                <t t-set="t_rt" t-value="t_sdi + val.get('t_rt')"/>
+                                <t t-set="t_gua" t-value="t_sdi + val.get('t_gua')"/>
+                                <t t-set="t_total" t-value="t_sdi + val.get('t_total')"/>
                                 <tr>
-                                    <td>
-                                        <strong>Fecha</strong>
+                                    <td colspan="2">
+                                        <span t-esc="p.date_to"/>
                                     </td>
-                                    <td>
-                                        <strong>N.S.S.</strong>
+                                    <td colspan="2">
+                                        <span t-field="p.employee_id.imss"/>
                                     </td>
-                                    <td>
-                                        <strong>Cve</strong>
+                                    <td colspan="2">
+                                        <span t-esc="p.employee_id.cod_emp"/>
                                     </td>
-                                    <td>
-                                        <strong>Nombre Trabajador</strong>
+                                    <td colspan="2">
+                                        <span t-field="p.employee_id"/>
                                     </td>
-                                    <td>
-                                        <strong>RFC</strong>
+                                    <td colspan="2">
+                                        <span t-field="p.employee_id.rfc"/>
                                     </td>
-                                    <td>
-                                        <strong>CURP</strong>
-                                    </td>
-                                    <td style="text-align: center;font-size:14px" colspan="12">
-                                        <strong>Enfermedades y Maternidad</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Días</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Inc.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Aus.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>SDI</strong>
-                                    </td>
-                                    <td>
-                                        <strong>C.F.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Exc.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>P.D.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>G.M.P.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>R.T.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>I.V.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>G.P.S.</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Suma</strong>
+                                    <td colspan="2">
+                                        <span t-esc="p.employee_id.curp"/>
                                     </td>
                                 </tr>
-                                <t t-set="t_sdi" t-value="0"/>
-                                <t t-set="t_inc" t-value="0"/>
-                                <t t-set="t_aus" t-value="0"/>
-                                <t t-set="t_pe" t-value="0"/>
-                                <t t-set="t_ae3" t-value="0"/>
-                                <t t-set="t_ed" t-value="0"/>
-                                <t t-set="t_gmp" t-value="0"/>
-                                <t t-set="t_iv" t-value="0"/>
-                                <t t-set="t_rt" t-value="0"/>
-                                <t t-set="t_gua" t-value="0"/>
-                                <t t-set="t_total" t-value="0"/>
-                                <t t-foreach="data['payslips']" t-as="p">
-                                    <t t-set="val" t-value="calc_val(p)"/>
-                                    <t t-set="t_sdi" t-value="t_sdi + val.get('t_sdi')"/>
-                                    <t t-set="t_inc" t-value="t_sdi + val.get('t_inc')"/>
-                                    <t t-set="t_aus" t-value="t_sdi + val.get('t_aus')"/>
-                                    <t t-set="t_pe" t-value="t_sdi + val.get('t_pe')"/>
-                                    <t t-set="t_ae3" t-value="t_sdi + val.get('t_ae3')"/>
-                                    <t t-set="t_ed" t-value="t_sdi + val.get('t_ed')"/>
-                                    <t t-set="t_gmp" t-value="t_sdi + val.get('t_gmp')"/>
-                                    <t t-set="t_iv" t-value="t_sdi + val.get('t_iv')"/>
-                                    <t t-set="t_rt" t-value="t_sdi + val.get('t_rt')"/>
-                                    <t t-set="t_gua" t-value="t_sdi + val.get('t_gua')"/>
-                                    <t t-set="t_total" t-value="t_sdi + val.get('t_total')"/>
-                                    <tr>
-                                        <td>
-                                            <span t-esc="p.date_to"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="p.employee_id.imss"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.employee_id.cod_emp"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="p.employee_id"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="p.employee_id.rfc"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.employee_id.curp"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="val.get('dias_trabajados')"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="val.get('inc')"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="val.get('aus')"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.sdi" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.pe_patron" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.ae3_patron + p.ae3_trab"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.ed_patron" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.gmp_patron + p.gmp_trab"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.rt_patron" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.iv_patron + p.iv_trab"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.gua_patron" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="val.get('suma_patron') + val.get('suma_trab')"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span>Cuota trabajador</span>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.ae3_trab" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.ed_trab" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.gmp_trab" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span>-</span>
-                                        </td>
-                                        <td>
-                                            <span t-esc="p.iv_trab" t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
-                                        <td>
-                                            <span>-</span>
-                                        </td>
-                                        <td>
-                                            <span t-esc="val.get('suma_trab')"
-                                                  t-options='{"widget": "float", "precision": 2}'/>
-                                        </td>
+                                <tr>
+                                    <td>
+                                        <span t-esc="val.get('dias_trabajados')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('inc')"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('aus')"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.sdi" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.pe_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.ae3_patron + p.ae3_trab"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.ed_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.gmp_patron + p.gmp_trab"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.rt_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.iv_patron + p.iv_trab"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.gua_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('suma_patron') + val.get('suma_trab')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5">
+                                        <span>Cuota patrón</span>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.ae3_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.ed_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.gmp_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.rt_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.iv_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="p.gua_patron" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('suma_patron')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: solid 2px #034e7f;" colspan="5">
+                                        <span>Cuota trabajador</span>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span t-esc="p.ae3_trab" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span t-esc="p.ed_trab" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span t-esc="p.gmp_trab" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span>-</span>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span t-esc="p.iv_trab" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span>-</span>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;">
+                                        <span t-esc="val.get('suma_trab')" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td style="border-bottom: solid 2px #034e7f;"/>
+                                    <td style="border-bottom: solid 2px #034e7f;"/>
+                                    <td style="border-bottom: solid 2px #034e7f;"/>
+                                    <td style="border-bottom: solid 2px #034e7f;"/>
+                                </tr>
+                            </t>
 
-                                    </tr>
-                                </t>
-
-                            </table>
-                            <!--                            <div class="row col-12">-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Fecha</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>N.S.S.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Cve</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-5">-->
-                            <!--                                    <strong>Nombre Trabajador</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-2">-->
-                            <!--                                    <strong>RFC</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-2">-->
-                            <!--                                    <strong>CURP</strong>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
-                            <!--                            <div class="row">-->
-                            <!--                                <div class="col-12" style="text-align: center ;">-->
-                            <!--                                    <center>-->
-                            <!--                                        <strong style="font-size: 14px ;">-->
-                            <!--                                            Enfermedades y Maternidad-->
-                            <!--                                        </strong>-->
-                            <!--                                    </center>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
-                            <!--                            <div class="row col-12">-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Días</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Inc.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Aus.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>SDI</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>C.F.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Exc.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>P.D.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>G.M.P.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>R.T.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>I.V.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>G.P.S.</strong>-->
-                            <!--                                </div>-->
-                            <!--                                <div class="col-1">-->
-                            <!--                                    <strong>Suma</strong>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
-                        </div>
+                        </table>
+                        <!--                            <div class="row col-12">-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Fecha</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>N.S.S.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Cve</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-5">-->
+                        <!--                                    <strong>Nombre Trabajador</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-2">-->
+                        <!--                                    <strong>RFC</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-2">-->
+                        <!--                                    <strong>CURP</strong>-->
+                        <!--                                </div>-->
+                        <!--                            </div>-->
+                        <!--                            <div class="row">-->
+                        <!--                                <div class="col-12" style="text-align: center ;">-->
+                        <!--                                    <center>-->
+                        <!--                                        <strong style="font-size: 14px ;">-->
+                        <!--                                            Enfermedades y Maternidad-->
+                        <!--                                        </strong>-->
+                        <!--                                    </center>-->
+                        <!--                                </div>-->
+                        <!--                            </div>-->
+                        <!--                            <div class="row col-12">-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Días</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Inc.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Aus.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>SDI</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>C.F.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Exc.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>P.D.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>G.M.P.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>R.T.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>I.V.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>G.P.S.</strong>-->
+                        <!--                                </div>-->
+                        <!--                                <div class="col-1">-->
+                        <!--                                    <strong>Suma</strong>-->
+                        <!--                                </div>-->
+                        <!--                            </div>-->
+                        <!--                        </div>-->
 
                         <!--Datos-->
                         <!--                        <t t-set="t_sdi" t-value="0"/>-->

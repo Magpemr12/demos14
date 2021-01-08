@@ -616,9 +616,9 @@
             <field name="line_ids" position="replace">
                 <field name="line_ids" colspan="4" nolabel="1">
                     <tree string="Salary Structure" colors="blue:total == 0">
-                        <field name="salary_rule_id"/>
+<!--                        <field name="salary_rule_id"/>-->
                         <field name="code"/>
-                        <field name="category_id"/>
+<!--                        <field name="category_id"/>-->
                         <field name="name"/>
                         <field name="sequence" invisible="1"/>
                         <field name="quantity"/>

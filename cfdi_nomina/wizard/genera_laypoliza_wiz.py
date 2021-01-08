@@ -32,6 +32,8 @@ class HrGenLayPolizaWiz(models.TransientModel):
 
         data = self.get_poliza_data(payslips)
 
+        print ("Data =-=-=-", data)
+
         wbk = xlwt.Workbook(encoding='utf-8')
         # fl = StringIO()
         # Estilos
@@ -80,7 +82,7 @@ class HrGenLayPolizaWiz(models.TransientModel):
             # sheet.col(9).style = style_decimal
 
         real_filename = NamedTemporaryFile()
-        # wbk.save(real_filename.name)
+        wbk.save(real_filename.name)
         file1 = open(real_filename.name, 'rb')
 
         self.data_file = base64.encodebytes(file1.read())
@@ -204,8 +206,8 @@ class HrGenLayPolizaWiz(models.TransientModel):
                         '01',  # CIA Siempre será 01
                         cuenta,  # Cuenta
                         '000',  # Depto  Siempre sera 000
-                        emp.company_id.x_id_almacen or '',  # Agregado con Studio por Jaime de OFIX
-                        idregion_dict.get(emp.company_id.x_id_region, ''),  # Agregado con Studio por Jaime de OFIX
+                        emp.company_id.warehouse or '',  # Agregado con Studio por Jaime de OFIX
+                        idregion_dict.get(emp.company_id.xs_id_region, ''),  # Agregado con Studio por Jaime de OFIX
                         '0000',  # Linea  Siempre debera ser 0000
                         emp.barcode,  # Asoc
                         cargo,  # Cargo
