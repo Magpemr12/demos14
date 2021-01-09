@@ -178,7 +178,7 @@ class HRSalaryRule(models.Model):
     tipo_id = fields.Many2one("cfdi_nomina.tipo", string="Type")
     tipo_de_percepcion = fields.Selection([
         ('fijo', 'Fijo'),
-        ('variable', 'Variable')], string="Type Of Perception", required=True)
+        ('variable', 'Variable')], string="Type Of Perception", required=True, default='fijo')
 
     tipo_horas = fields.Many2one(
         "cfdi_nomina.tipo_horas", string="Type of overtime")
