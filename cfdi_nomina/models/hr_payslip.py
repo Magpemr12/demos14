@@ -517,7 +517,11 @@ class HrPayslip(models.Model):
                              ),
                             ]
 
-            payslip.sdi_fijo = integ_factor * daily_salary
+            if integ_factor > 0:
+                payslip.sdi_fijo = integ_factor * daily_salary
+            else:
+                payslip.sdi_fijo = payslip.employee_id.sueldo_imss
+            # payslip.sdi_fijo = integ_factor * daily_salary
 
             salary = 0
             for sal in payslip.line_ids:
