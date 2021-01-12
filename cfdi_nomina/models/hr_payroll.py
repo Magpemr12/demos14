@@ -13,6 +13,9 @@ class HrPayslipEmployees(models.TransientModel):
     _inherit = 'hr.payslip.employees'
     _description = 'hr payslip employees'
 
+    employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees',
+                                    default=[], required=True)
+
     def compute_sheet(self):
         self.ensure_one()
         if not self.env.context.get('active_id'):
