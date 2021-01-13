@@ -160,10 +160,10 @@ class HrPayslipRun(models.Model):
     _name = 'hr.payslip.run'
     _inherit = ['hr.payslip.run', 'mail.thread', 'mail.activity.mixin']
 
-    date_from = fields.Date(help='Used to get the lack to the employees', required=True)
-    date_to = fields.Date(help='Used to get the lack to the employees', required=True)
+    date_from = fields.Date(help='Used to get the lack to the employees', required=False)
+    date_to = fields.Date(help='Used to get the lack to the employees', required=False)
     total = fields.Float('Total Amount', digits='Payroll', default=0.00)
-    fecha_pago = fields.Date('Payment date', required=True)
+    fecha_pago = fields.Date('Payment date', required=False)
     tipo_calculo = fields.Selection([
         ('anual', 'Anual'),
         ('ajustado', 'Ajustado'),
@@ -171,7 +171,7 @@ class HrPayslipRun(models.Model):
     ], 'Calculation type', default='mensual')
     # period_id = fields.Many2one(
     #    "account.period", string='Periodo', required=True)
-    struct_id = fields.Many2one('hr.payroll.structure', string='Structure', required=True,
+    struct_id = fields.Many2one('hr.payroll.structure', string='Structure', required=False,
                                 readonly=True, states={'draft': [('readonly', False)]},
                                 help='Defines the rules that have to be applied to this payslip, accordingly '
                                      'to the contract chosen. If you let empty the field contract, this field isn\'t '
