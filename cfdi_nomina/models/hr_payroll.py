@@ -13,8 +13,10 @@ class HrPayslipEmployees(models.TransientModel):
     _inherit = 'hr.payslip.employees'
     _description = 'hr payslip employees'
 
-    employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees',
-                                    default=[], required=True)
+    def _get_employees(self):
+        # YTI check dates too
+        if self._context and 'from_payslip_batch' not in self._context:
+            return self.env['hr.employee'].search(self._get_available_contracts_domain())
 
     def compute_sheet(self):
         self.ensure_one()
