@@ -12,6 +12,8 @@ from odoo.tools.safe_eval import safe_eval
 from pytz import timezone, utc
 from collections import defaultdict
 from odoo.exceptions import ValidationError, UserError
+from odoo.tools import date_utils
+
 
 GRAVADO_EXENTO_SEL = [
     ('ninguno', 'Ninguno'),
@@ -754,7 +756,6 @@ class HRSalaryRule(models.Model):
             'TOTAL_OTROS_PAGOS', 0.0) + otropago
 
         # _logger.info('Nombre {}, Code {}, sequence {}, tipo {}'.format(self.name, self.code, self.sequence, self.tipo_id.name))
-
         return amount, qty, rate
 
     def _compute_rule_partial(self, amount_python_compute, localdict):
@@ -878,6 +879,80 @@ class HrContract(models.Model):
     salary_journal = fields.Many2one(
         'account.journal', 'Salary diary', required=True)
 
+    def _get_work_hours(self, date_from, date_to, domain=None):
+        """
+        Returns the amount (expressed in hours) of work
+        for a contract between two dates.
+        If called on multiple contracts, sum work amounts of each contract.
+        :param date_from: The start date
+        :param date_to: The end date
+        :returns: a dictionary {work_entry_id: hours_1, work_entry_2: hours_2}
+        """
+
+        generated_date_max = min(fields.Date.to_date(date_to), date_utils.end_of(fields.Date.today(), 'month'))
+        self._generate_work_entries(date_from, generated_date_max)
+        date_from = datetime.datetime.combine(date_from, datetime.datetime.min.time())
+        date_to = datetime.datetime.combine(date_to, datetime.datetime.max.time())
+        work_data = defaultdict(int)
+
+        # First, found work entry that didn't exceed interval.
+        domain = domain or []
+        unpaid_domain = domain or []
+        domain +=  [('company_id', '=', self.company_id.id),
+                    ('work_entry_type_id', '!=', self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id)]
+        context = self._context
+        holiday_data = {}
+        if 'l_date_from' in context and 'l_date_to' in context:
+            unpaid_domain += [('company_id', '=', self.company_id.id),
+                       ('work_entry_type_id', '=', self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id)]
+            l_date_from = context.get('l_date_from')
+            l_date_to = context.get('l_date_to')
+            unpaid_work_entries = self.env['hr.work.entry'].read_group(
+                self._get_work_hours_domain(l_date_from, l_date_to, domain=unpaid_domain, inside=True),
+                ['hours:sum(duration)'],
+                ['work_entry_type_id'],
+            )
+            work_data.update(
+                {data['work_entry_type_id'][0] if data['work_entry_type_id'] else False: data['hours'] for data in
+                 unpaid_work_entries})
+
+            unpaid_work_entries = self.env['hr.work.entry'].search(
+                self._get_work_hours_domain(l_date_from, l_date_to, domain=unpaid_domain, inside=True)
+            )
+            for entry in unpaid_work_entries:
+                if entry.leave_id:
+                    if entry.work_entry_type_id.id in holiday_data.keys():
+                        holiday_data.update({entry.work_entry_type_id.id: holiday_data.get(entry.work_entry_type_id.id) +
+                                                 [entry.leave_id]})
+                    else:
+                        holiday_data.update({entry.work_entry_type_id.id: [entry.leave_id]})
+
+        work_entries = self.env['hr.work.entry'].read_group(
+            self._get_work_hours_domain(date_from, date_to, domain=domain, inside=True),
+            ['hours:sum(duration)'],
+            ['work_entry_type_id']
+        )
+
+        work_data.update({data['work_entry_type_id'][0] if data['work_entry_type_id'] else False: data['hours'] for data in work_entries})
+
+        # Second, found work entry that exceed interval and compute right duration.
+        work_entries = self.env['hr.work.entry'].search(self._get_work_hours_domain(date_from, date_to, domain=domain, inside=False))
+        for work_entry in work_entries:
+            date_start = max(date_from, work_entry.date_start)
+            date_stop = min(date_to, work_entry.date_stop)
+            if work_entry.work_entry_type_id.is_leave:
+                contract = work_entry.contract_id
+                calendar = contract.resource_calendar_id
+                employee = contract.employee_id
+                contract_data = employee._get_work_days_data_batch(
+                    date_start, date_stop, compute_leaves=False, calendar=calendar
+                )[employee.id]
+
+                work_data[work_entry.work_entry_type_id.id] += contract_data.get('hours', 0)
+            else:
+                dt = date_stop - date_start
+                work_data[work_entry.work_entry_type_id.id] += dt.days * 24 + dt.seconds / 3600  # Number of hours
+        return work_data, holiday_data
 
 class HrJob(models.Model):
     _inherit = 'hr.job'

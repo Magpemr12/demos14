@@ -45,7 +45,7 @@ class HrPayslipEmployees(models.TransientModel):
             ('date_stop', '>=', payslip_run.date_start),
             ('employee_id', 'in', self.employee_ids.ids)
         ])
-        self._check_undefined_slots(work_entries, payslip_run)
+        # self._check_undefined_slots(work_entries, payslip_run)
         if (self.structure_id.type_id.default_struct_id == self.structure_id):
             work_entries = work_entries.filtered(lambda work_entry: work_entry.state != 'validated')
             if work_entries._check_if_error():
