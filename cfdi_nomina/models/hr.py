@@ -901,6 +901,7 @@ class HrContract(models.Model):
         domain +=  [('company_id', '=', self.company_id.id),
                     ('work_entry_type_id', '!=', self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id)]
         context = self._context
+        holiday_data = {}
         if 'l_date_from' in context and 'l_date_to' in context:
             unpaid_domain += [('company_id', '=', self.company_id.id),
                        ('work_entry_type_id', '=', self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id)]
@@ -909,11 +910,22 @@ class HrContract(models.Model):
             unpaid_work_entries = self.env['hr.work.entry'].read_group(
                 self._get_work_hours_domain(l_date_from, l_date_to, domain=unpaid_domain, inside=True),
                 ['hours:sum(duration)'],
-                ['work_entry_type_id']
+                ['work_entry_type_id'],
             )
             work_data.update(
                 {data['work_entry_type_id'][0] if data['work_entry_type_id'] else False: data['hours'] for data in
                  unpaid_work_entries})
+
+            unpaid_work_entries = self.env['hr.work.entry'].search(
+                self._get_work_hours_domain(l_date_from, l_date_to, domain=unpaid_domain, inside=True)
+            )
+            for entry in unpaid_work_entries:
+                if entry.leave_id:
+                    if entry.work_entry_type_id.id in holiday_data.keys():
+                        holiday_data.update({entry.work_entry_type_id.id: holiday_data.get(entry.work_entry_type_id.id) +
+                                                 [entry.leave_id]})
+                    else:
+                        holiday_data.update({entry.work_entry_type_id.id: [entry.leave_id]})
 
         work_entries = self.env['hr.work.entry'].read_group(
             self._get_work_hours_domain(date_from, date_to, domain=domain, inside=True),
@@ -940,9 +952,7 @@ class HrContract(models.Model):
             else:
                 dt = date_stop - date_start
                 work_data[work_entry.work_entry_type_id.id] += dt.days * 24 + dt.seconds / 3600  # Number of hours
-        return work_data
-
-
+        return work_data, holiday_data
 
 class HrJob(models.Model):
     _inherit = 'hr.job'

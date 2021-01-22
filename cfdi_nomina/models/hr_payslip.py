@@ -216,9 +216,10 @@ class HrPayslip(models.Model):
         contract = self.contract_id
         if contract.resource_calendar_id:
             hours_per_day = self._get_worked_day_lines_hours_per_day()
-            work_hours = contract.with_context(l_date_from=self.day_leave_from,
-                                               l_date_to=self.day_leave_to)._get_work_hours(self.date_from, self.date_to,
-                                                                             domain=domain)
+            work_hours, holiday_data = contract.with_context(l_date_from=self.day_leave_from,
+                                               l_date_to=self.day_leave_to)._get_work_hours(self.date_from,
+                                                                                            self.date_to,
+                                                                                            domain=domain)
             work_hours_ordered = sorted(work_hours.items(), key=lambda x: x[1])
             biggest_work = work_hours_ordered[-1][0] if work_hours_ordered else 0
             add_days_rounding = 0
@@ -235,6 +236,8 @@ class HrPayslip(models.Model):
                     'number_of_days': day_rounded,
                     'number_of_hours': hours,
                 }
+                if work_entry_type_id in holiday_data:
+                    attendance_line.update({'holiday_ids': [(4, leave.id)] for leave in holiday_data.get(work_entry_type_id)})
                 res.append(attendance_line)
 
             if not check_out_of_contract:
@@ -385,28 +388,17 @@ class HrPayslip(models.Model):
             self.registro_patronal_codigo = self.employee_id.registro_patronal.name
         self.input_line_ids = [(5, 0)]
         self.input_line_ids = [(0, 0, val) for val in self.get_inputs([self.contract_id], self.date_from, self.date_to)]
-        # if self.struct_id and self.struct_id.rule_ids and self.struct_id.rule_ids.input_ids:
-        #     self.input_line_ids = [(5, 0)]
-        #     payslip_input_type_obj = self.env['hr.payslip.input.type']
-        #     for line in self.struct_id.rule_ids.input_ids:
-        #         type = payslip_input_type_obj.search([('name', '=', line.name), ('code', '=', line.code),
-        #                                               ('struct_ids', 'in', self.struct_id.id)], limit=1)
-        #         if not type:
-        #             type = payslip_input_type_obj.create({
-        #                 'name': line.name,
-        #                 'code': line.code,
-        #                 'struct_ids': [(4, self.struct_id.id)]
-        #             })
-        #         self.input_line_ids = [(0, 0, {
-        #             'input_type_id': type.id,
-        #             'code': line.code
-        #         })]
-        # for input in self.input_line_ids:
-        #     movement = self.env['hr.mov.nomina.line'].search([('employee_id', '=', self.employee_id.id),
-        #                                                       ('mov_nomina_id.rule_code', '=', input.code)], limit=1)
-        #     if movement:
-        #         input.amount_python_compute = movement.amount_python_compute
-        return super(HrPayslip, self)._onchange_employee()
+        res = super(HrPayslip, self)._onchange_employee()
+        if self.day_leave_from and self.day_leave_to:
+            tipo_ausencia_id = self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id
+            date_start = self.day_leave_from
+            date_to = self.day_leave_to
+            unpaid_work_input = self.worked_days_line_ids.filtered(
+                lambda input: input.work_entry_type_id.id == tipo_ausencia_id)
+            if unpaid_work_input:
+                work100_input = self.worked_days_line_ids.filtered(lambda input: input.code == 'WORK100')
+                work100_input.number_of_days = work100_input.number_of_days - unpaid_work_input.number_of_days
+        return res
 
     def _calculation_confirm_sheet(self, use_new_cursor=False):
         with api.Environment.manage():
