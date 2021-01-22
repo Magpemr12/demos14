@@ -108,6 +108,7 @@ class HrPayslipLine(models.Model):
                        help="The code of salary rules can be used as reference in computation of other rules. "
                             "In that case, it is case sensitive.")
 
+
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
     _description = 'hr payslip'
@@ -203,7 +204,68 @@ class HrPayslip(models.Model):
                                     compute='_compute_details_by_salary_rule_category',
                                     string='Details by Salary Rule Category')
     UMA = fields.Float("UMA")
-    accumlated = fields.Boolean(string="accumlated",default=False)
+    accumlated = fields.Boolean(string="accumlated", default=False)
+
+    def _get_worked_day_lines(self, domain=None, check_out_of_contract=True):
+        """
+        :returns: a list of dict containing the worked days values that should be applied for the given payslip
+        """
+        res = []
+        # fill only if the contract as a working schedule linked
+        self.ensure_one()
+        contract = self.contract_id
+        if contract.resource_calendar_id:
+            hours_per_day = self._get_worked_day_lines_hours_per_day()
+            work_hours = contract.with_context(l_date_from=self.day_leave_from,
+                                               l_date_to=self.day_leave_to)._get_work_hours(self.date_from, self.date_to,
+                                                                             domain=domain)
+            work_hours_ordered = sorted(work_hours.items(), key=lambda x: x[1])
+            biggest_work = work_hours_ordered[-1][0] if work_hours_ordered else 0
+            add_days_rounding = 0
+            for work_entry_type_id, hours in work_hours_ordered:
+                work_entry_type = self.env['hr.work.entry.type'].browse(work_entry_type_id)
+                days = round(hours / hours_per_day, 5) if hours_per_day else 0
+                if work_entry_type_id == biggest_work:
+                    days += add_days_rounding
+                day_rounded = self._round_days(work_entry_type, days)
+                add_days_rounding += (days - day_rounded)
+                attendance_line = {
+                    'sequence': work_entry_type.sequence,
+                    'work_entry_type_id': work_entry_type_id,
+                    'number_of_days': day_rounded,
+                    'number_of_hours': hours,
+                }
+                res.append(attendance_line)
+
+            if not check_out_of_contract:
+                return res
+
+            # If the contract doesn't cover the whole month, create
+            # worked_days lines to adapt the wage accordingly
+            out_days, out_hours = 0, 0
+            reference_calendar = self._get_out_of_contract_calendar()
+            if self.date_from < contract.date_start:
+                start = fields.Datetime.to_datetime(self.date_from)
+                stop = fields.Datetime.to_datetime(contract.date_start) + relativedelta(days=-1, hour=23, minute=59)
+                out_time = reference_calendar.get_work_duration_data(start, stop, compute_leaves=False)
+                out_days += out_time['days']
+                out_hours += out_time['hours']
+            if contract.date_end and contract.date_end < self.date_to:
+                start = fields.Datetime.to_datetime(contract.date_end) + relativedelta(days=1)
+                stop = fields.Datetime.to_datetime(self.date_to) + relativedelta(hour=23, minute=59)
+                out_time = reference_calendar.get_work_duration_data(start, stop, compute_leaves=False)
+                out_days += out_time['days']
+                out_hours += out_time['hours']
+
+            if out_days or out_hours:
+                work_entry_type = self.env.ref('hr_payroll.hr_work_entry_type_out_of_contract')
+                res.append({
+                    'sequence': work_entry_type.sequence,
+                    'work_entry_type_id': work_entry_type.id,
+                    'number_of_days': out_days,
+                    'number_of_hours': out_hours,
+                })
+        return res
 
     def _compute_details_by_salary_rule_category(self):
         for payslip in self:
@@ -250,7 +312,7 @@ class HrPayslip(models.Model):
     def get_inputs(self, contracts, date_from, date_to):
         # res = []
         # if self._context.get('struct_run_id'):
-            # Si en el context viene la estructura a usar desde el Procesamiento de Nominas
+        # Si en el context viene la estructura a usar desde el Procesamiento de Nominas
 
         res = []
         if self.struct_id:
@@ -261,13 +323,13 @@ class HrPayslip(models.Model):
             payslip_input_type_obj = self.env['hr.payslip.input.type']
             for input in inputs:
                 type = payslip_input_type_obj.search([('name', '=', input.name), ('code', '=', input.code),
-                                                            ('struct_ids', 'in', self.struct_id.id)], limit=1)
+                                                      ('struct_ids', 'in', self.struct_id.id)], limit=1)
                 if not type:
-                  type = payslip_input_type_obj.create({
-                      'name': input.name,
-                      'code': input.code,
-                      'struct_ids': [(4, self.struct_id.id)]
-                  })
+                    type = payslip_input_type_obj.create({
+                        'name': input.name,
+                        'code': input.code,
+                        'struct_ids': [(4, self.struct_id.id)]
+                    })
                 input_data = {
                     'input_type_id': type.id,
                     'code': input.code,
@@ -322,7 +384,7 @@ class HrPayslip(models.Model):
         if self.employee_id and self.employee_id.registro_patronal:
             self.registro_patronal_codigo = self.employee_id.registro_patronal.name
         self.input_line_ids = [(5, 0)]
-        self.input_line_ids = [(0, 0, val ) for val in self.get_inputs([self.contract_id], self.date_from, self.date_to)]
+        self.input_line_ids = [(0, 0, val) for val in self.get_inputs([self.contract_id], self.date_from, self.date_to)]
         # if self.struct_id and self.struct_id.rule_ids and self.struct_id.rule_ids.input_ids:
         #     self.input_line_ids = [(5, 0)]
         #     payslip_input_type_obj = self.env['hr.payslip.input.type']
@@ -345,7 +407,6 @@ class HrPayslip(models.Model):
         #     if movement:
         #         input.amount_python_compute = movement.amount_python_compute
         return super(HrPayslip, self)._onchange_employee()
-
 
     def _calculation_confirm_sheet(self, use_new_cursor=False):
         with api.Environment.manage():
@@ -382,15 +443,15 @@ class HrPayslip(models.Model):
 
     def _get_hr_input_type(self, name, rule_code):
 
-        input_type = self.env['hr.payslip.input.type'].search([('code','=',rule_code)])
+        input_type = self.env['hr.payslip.input.type'].search([('code', '=', rule_code)])
         if not input_type:
             input_type = self.env['hr.payslip.input.type'].create({
-                'name':name,
-                'code':rule_code,
+                'name': name,
+                'code': rule_code,
             })
         return input_type
 
-    @api.depends('sdi_fijo','sdi_var')
+    @api.depends('sdi_fijo', 'sdi_var')
     def update_idw(self):
 
         for payslip in self:
@@ -400,19 +461,18 @@ class HrPayslip(models.Model):
         uma = self.env['ir.config_parameter'].sudo().get_param('cfdi_nomina.UMA')
         for payslip in self:
             payslip.UMA = uma
-        #Get the total on header
+        # Get the total on header
         res = super(HrPayslip, self).compute_sheet()
         for payslip in self:
             for line in payslip.line_ids:
                 if line.code == 'S_TOTAL' and line.category_id.code == 'NET':
                     payslip.total = line.total
 
-
-            #Get other input info based on commmission code P002
+            # Get other input info based on commmission code P002
             payslip.sdi_info_calc_ids.unlink()
             payslip.sdip_info_calc_ids.unlink()
             payslip.sdiv_info_calc_ids.unlink()
-            exist=False
+            exist = False
             for input_line in payslip.input_line_ids:
                 if input_line.code == 'P002':
                     exist = True
@@ -423,29 +483,29 @@ class HrPayslip(models.Model):
                         if employee_info.employee_id.id == payslip.employee_id.id:
                             hr_input_type = self._get_hr_input_type(nomina.name, nomina.rule_code)
                             self.env['hr.payslip.input'].create({
-                                'input_type_id':hr_input_type.id,
-                                'amount_python_compute':employee_info.amount_python_compute,
-                                'code':nomina.rule_code,
-                                'payslip_id':self.id,
+                                'input_type_id': hr_input_type.id,
+                                'amount_python_compute': employee_info.amount_python_compute,
+                                'code': nomina.rule_code,
+                                'payslip_id': self.id,
                             })
 
-            #Get Other info on compute sheet in progress
-            table_vaction = self.env['hr.vacation'].search([],limit=1)
+            # Get Other info on compute sheet in progress
+            table_vaction = self.env['hr.vacation'].search([], limit=1)
             table_factor = self.env['hr.factor'].search([], limit=1)
             daily_salary = payslip.employee_id.sueldo_diario
             integ_factor = 0
             vacation = 0
             years = payslip.employee_id.anos_servicio
             for vacation_days in table_vaction.vac_line_ids:
-                if payslip.employee_id.anos_servicio == 1 and vacation_days.years_old ==1:
+                if payslip.employee_id.anos_servicio == 1 and vacation_days.years_old == 1:
                     vacation = vacation_days.dias_prima_vacacional
-                elif payslip.employee_id.anos_servicio == 2 and vacation_days.years_old ==2:
+                elif payslip.employee_id.anos_servicio == 2 and vacation_days.years_old == 2:
                     vacation = vacation_days.dias_prima_vacacional
                 elif payslip.employee_id.anos_servicio == 3 and vacation_days.years_old == 3:
                     vacation = vacation_days.dias_prima_vacacional
                 elif payslip.employee_id.anos_servicio == 4 and vacation_days.years_old == 4:
                     vacation = vacation_days.dias_prima_vacacional
-                elif payslip.employee_id.anos_servicio >= 5 and vacation_days.years_old <10:
+                elif payslip.employee_id.anos_servicio >= 5 and vacation_days.years_old < 10:
                     vacation = vacation_days.dias_prima_vacacional
                 elif payslip.employee_id.anos_servicio >= 10 and payslip.employee_id.anos_servicio < 15:
                     vacation = vacation_days.dias_prima_vacacional
@@ -457,10 +517,10 @@ class HrPayslip(models.Model):
                     vacation = vacation_days.dias_prima_vacacional
             bonus = 0
             for year_info in table_factor.fi_line_ids:
-                if payslip.employee_id.anos_servicio == 1 and year_info.years_old ==1:
+                if payslip.employee_id.anos_servicio == 1 and year_info.years_old == 1:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio == 2 and year_info.years_old ==2:
+                elif payslip.employee_id.anos_servicio == 2 and year_info.years_old == 2:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
                 elif payslip.employee_id.anos_servicio == 3 and year_info.years_old == 3:
@@ -473,27 +533,27 @@ class HrPayslip(models.Model):
                         and year_info.years_old == 9:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >= 10 and payslip.employee_id.anos_servicio <=14 and \
+                elif payslip.employee_id.anos_servicio >= 10 and payslip.employee_id.anos_servicio <= 14 and \
                         year_info.years_old == 14:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >=15 and payslip.employee_id.anos_servicio <= 19 and  \
+                elif payslip.employee_id.anos_servicio >= 15 and payslip.employee_id.anos_servicio <= 19 and \
                         year_info.years_old == 19:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >= 20 and payslip.employee_id.anos_servicio <= 24 and  \
+                elif payslip.employee_id.anos_servicio >= 20 and payslip.employee_id.anos_servicio <= 24 and \
                         year_info.years_old == 24:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >= 25 and payslip.employee_id.anos_servicio <= 29 and  \
+                elif payslip.employee_id.anos_servicio >= 25 and payslip.employee_id.anos_servicio <= 29 and \
                         year_info.years_old == 29:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >= 30 and payslip.employee_id.anos_servicio <= 34 and  \
+                elif payslip.employee_id.anos_servicio >= 30 and payslip.employee_id.anos_servicio <= 34 and \
                         year_info.years_old == 34:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
-                elif payslip.employee_id.anos_servicio >= 35  and payslip.employee_id.anos_servicio <= 39 and  \
+                elif payslip.employee_id.anos_servicio >= 35 and payslip.employee_id.anos_servicio <= 39 and \
                         year_info.years_old == 39:
                     bonus = year_info.dias_aguinaldo
                     integ_factor = year_info.factor_integracion
@@ -503,19 +563,19 @@ class HrPayslip(models.Model):
                 if work_day.work_entry_type_id and work_day.work_entry_type_id.code == 'WORK100':
                     Dias_Trabajados = work_day.number_of_days
 
-            key_factor_info = [(0,0, {'name':'Factor Integracion', 'value':integ_factor}
-                             ),
-                            (0, 0, {'name':'Salario Diarios Orinario','code': 'SDO','value':daily_salary}
-                             ),
-                            (0, 0, {'name':'Dias Trabajados', 'value': Dias_Trabajados}
-                             ),
-                            (0, 0, {'name':'Dias Prima Vacaciona', 'code': 'DPV','value':vacation}
-                             ),
-                            (0, 0, {'name':'Dias Aguinaldo','code': 'DAG', 'value':bonus}
-                             ),
-                            (0, 0, {'name':'Anos Servicio', 'value':years}
-                             ),
-                            ]
+            key_factor_info = [(0, 0, {'name': 'Factor Integracion', 'value': integ_factor}
+                                ),
+                               (0, 0, {'name': 'Salario Diarios Orinario', 'code': 'SDO', 'value': daily_salary}
+                                ),
+                               (0, 0, {'name': 'Dias Trabajados', 'value': Dias_Trabajados}
+                                ),
+                               (0, 0, {'name': 'Dias Prima Vacaciona', 'code': 'DPV', 'value': vacation}
+                                ),
+                               (0, 0, {'name': 'Dias Aguinaldo', 'code': 'DAG', 'value': bonus}
+                                ),
+                               (0, 0, {'name': 'Anos Servicio', 'value': years}
+                                ),
+                               ]
 
             if integ_factor > 0:
                 payslip.sdi_fijo = integ_factor * daily_salary
@@ -528,18 +588,17 @@ class HrPayslip(models.Model):
                 if sal.code == 'P001' and sal.name == 'SUELDO':
                     salary = sal.total
 
-            #sdo * sdv / 365 * dias_trabjajados
+            # sdo * sdv / 365 * dias_trabjajados
             parte_prop_prima_vacacional = daily_salary * vacation / 365 * Dias_Trabajados
 
             # sdo * sdv / 365 * dias_trabjajados
             parte_prop_aguinaldo = bonus * daily_salary / 365 * Dias_Trabajados
 
             sdip_line_total = salary + parte_prop_prima_vacacional + parte_prop_aguinaldo
-            sdip_info_calc_ids = [(0,0,{'name':'SUELDO','code':'P001','value':salary}),
-                                  (0,0,{'name':'Parte prop prima vacacional', 'value': parte_prop_prima_vacacional}),
-                                  (0,0, {'name': 'Parte prop. aguinaldo', 'value': parte_prop_aguinaldo}),
+            sdip_info_calc_ids = [(0, 0, {'name': 'SUELDO', 'code': 'P001', 'value': salary}),
+                                  (0, 0, {'name': 'Parte prop prima vacacional', 'value': parte_prop_prima_vacacional}),
+                                  (0, 0, {'name': 'Parte prop. aguinaldo', 'value': parte_prop_aguinaldo}),
                                   (0, 0, {'name': 'Total de percepciones', 'value': sdip_line_total})]
-
 
             sdiv_info_calc_ids = []
             employee = payslip.employee_id
@@ -549,7 +608,6 @@ class HrPayslip(models.Model):
                 raise UserError(
                     'No hay tabla Base Gravable con id %s' % tabla_id)
 
-
             # from dateutil import relativedelta
             # xdate = self.date_from + relativedelta.relativedelta(months=1)
             # print (xdate, type(xdate))
@@ -558,7 +616,7 @@ class HrPayslip(models.Model):
                 raise UserError(
                     'No hay calendario definido para la tabla Base Gravable %s' % tbgrv.name)
             str_start_date, str_end_date = tbgrv.acum_calendar_id.get_periodo_anterior(
-                    payslip.date_from)
+                payslip.date_from)
 
             nomina_bimestral = self.env['hr.payslip'].search([
                 ('employee_id', '=', employee.id),
@@ -604,25 +662,25 @@ class HrPayslip(models.Model):
                     (0, 0, {'name': 'Percepciones bimestre', 'value': total_percepciones}))
 
                 sdi_var = bimestre_worked_days and total_percepciones / bimestre_worked_days or 0
-                payslip.write({'sdi_var':sdi_var})
+                payslip.write({'sdi_var': sdi_var})
 
             payslip.sdi = payslip.sdi_fijo + payslip.sdi_var
-            payslip.write({'sdi_info_calc_ids':key_factor_info})
-            payslip.write({'sdip_info_calc_ids':sdip_info_calc_ids})
-            payslip.write({'sdiv_info_calc_ids':sdiv_info_calc_ids})
+            payslip.write({'sdi_info_calc_ids': key_factor_info})
+            payslip.write({'sdip_info_calc_ids': sdip_info_calc_ids})
+            payslip.write({'sdiv_info_calc_ids': sdiv_info_calc_ids})
 
-            payslip.employee_id.update({'sueldo_imss':payslip.sdi})
-            amount=0
+            payslip.employee_id.update({'sueldo_imss': payslip.sdi})
+            amount = 0
             for rec in payslip.line_ids:
                 amount = rec.amount
                 name = rec.code + rec.name
-                accumulated_info = [(0,0,{'name':name,'actual_nc':amount}),
-                ]
+                accumulated_info = [(0, 0, {'name': name, 'actual_nc': amount}),
+                                    ]
                 if not payslip.accumlated:
-                    payslip.write({'acumulado_ids':accumulated_info,
-                            })
+                    payslip.write({'acumulado_ids': accumulated_info,
+                                   })
 
-            payslip.write({'accumlated':True})
+            payslip.write({'accumlated': True})
             payslip.calc_cuotas_obrero_patronal()
         return res
 
@@ -634,7 +692,6 @@ class HrPayslip(models.Model):
         tipo_otropago_id = self.env.ref(
             'cfdi_nomina.catalogo_tipo_otro_pago').id
 
-        
         # amount=0
         # for rec in self.line_ids:
         #     amount = rec.amount
@@ -709,7 +766,7 @@ class HrPayslip(models.Model):
                                            ((sbc - (uma * 3)) * payslip.dpnom) * rp.AE3_TRAB) / 100
                 payslip.ae3_patron = (
                                              ((sbc - (uma * 3)) * payslip.dpnom) * rp.AE3_PATRON) / 100
-            
+
             payslip.pe_patron = ((uma * dpnom) * rp.PE_PATRON) / 100
             payslip.ed_trab = ((sbc * dpnom) * rp.ED_TRAB) / 100
             payslip.ed_patron = ((sbc * dpnom) * rp.ED_PATRON) / 100
@@ -821,7 +878,6 @@ class HrPayslip(models.Model):
 
             # Sobreescribir dias trabajados
             work_data['days'] = dias_trabajados - dias_falta
-
             attendances = {
                 'name': _("Normal Working Days paid at 100%"),
                 'sequence': 1,
@@ -947,7 +1003,6 @@ class HrPayslip(models.Model):
         _logger.info("ispt_calc: {}".format(ispt_calc))
 
     def calculate_sdi(self, rule_localdict):
-
 
         def last_day_of_month(date):
             if date.month == 12:
@@ -1115,7 +1170,6 @@ class HrPayslip(models.Model):
         # Mismos calculos, pero para el bimestre actual,
         # el diccionario de reglas en tiempo de calculo de nomina actual
 
-    
         self.ensure_one()
 
         sdi_fijo = sdi_var = 0.0
@@ -1326,7 +1380,7 @@ class HrPayslip(models.Model):
         return sdi_fijo + sdi_var
 
     def calculate_sdi_last(self):
-        #Same calculations, but for the current two-month period, using data already calculated
+        # Same calculations, but for the current two-month period, using data already calculated
         self.ensure_one()
 
         sdi_fijo = sdi_var = 0.0
@@ -1543,7 +1597,6 @@ class HrPayslip(models.Model):
         if not tbgrv.acum_calendar_id:
             raise UserError(
                 'No hay calendario definido para la tabla Base Gravable %s' % tbgrv.name)
-
 
         field_name = field_name or tbgrv.data_field
         # No incluye nomina actual
