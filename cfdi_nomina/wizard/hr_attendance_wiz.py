@@ -10,13 +10,16 @@ _logger = logging.getLogger(__name__)
 
 
 def float_to_time(float_hour):
+    
     return datetime.time(int(math.modf(float_hour)[1]), int(60 * math.modf(float_hour)[0]), 0)
 
 
 class HrMovNomina(models.TransientModel):
+    
     _name = 'hr.attendance.gen.wiz'
     _description = 'Wizard to search for absences'
 
+    
     date_from = fields.Date('Initial Date', required=True,
                             default=(datetime.datetime.now() + relativedelta.relativedelta(days=-15)))
     date_to = fields.Date('Ending Date', required=True,
@@ -64,6 +67,7 @@ class HrMovNomina(models.TransientModel):
             [('state', '=', 'open'), ('employee_id', '!=', None)])
         # contratos_vigentes = self.env['hr.contract'].search([('state', '=', 'open'), ('employee_id', '!=', None)], limit=200)
         # contratos_vigentes = self.env['hr.contract'].search([('state', '=', 'open'), ('employee_id', '=', 4828)])
+        
 
         empleados_dict = {}
         for contrato in contratos_vigentes:
@@ -75,7 +79,8 @@ class HrMovNomina(models.TransientModel):
                     'contract': contrato,
                 }
 
-        empleados_ids = [i for i, data in empleados_dict.items()]
+
+        empleados_ids = [i for i, data in empleados_dict.items()]        
 
         start_date = fields.Datetime.from_string(self.date_from)
         tz_horas_diff_start = self.get_timedelta_tz(day=start_date)
@@ -123,7 +128,7 @@ class HrMovNomina(models.TransientModel):
 
         #  Busca dias dentro del rango que no tengan registrada alguna asistencia.
         #  faltas dias completos si no son de descanso
-        day_count = (end_date - start_date).days + 1
+        day_count = (end_date - start_date).days + 1      
 
         for single_date in (start_date + datetime.timedelta(n) for n in range(day_count)):
             weekday = single_date.weekday()
@@ -138,6 +143,7 @@ class HrMovNomina(models.TransientModel):
                         ('calendar_id', '=', contrato.resource_calendar_id.id)
                     ], order='hour_from ASC'
                     )
+                    # print("======== horario_ids",horario_ids)
                     if horario_ids:
                         # Tiene horario ese dia, de no ser dia de descanso,
                         # sera falta
@@ -154,10 +160,12 @@ class HrMovNomina(models.TransientModel):
         d = datetime.datetime.now() - inicio_time
         _logger.info(
             '******** Buscando faltas Tiempo {}'.format(d.seconds + d.microseconds / 1000000.0))
+        print("*************Buscando faltas Tiempo", d)
 
         # Busca faltas del dia en base a horario y asistencias
         for k, v in asisdic.items():
             horario_rst = v.get('horario_rst')
+            # print("horario_rst  :::",horario_rst)
 
             if len(horario_rst) and not self.es_descanso(v.get('employee'), v.get('weekday')):
                 ausencias = []
@@ -167,6 +175,7 @@ class HrMovNomina(models.TransientModel):
                         'tipo': 'falta',
                         'motivo': 'No se presentó',
                     })
+                    # print(" if ausencias================= :::",ausencias)
 
                 elif len(v.get('check_list')) < len(horario_rst) * 2:
                     # menos de las checadas del horario = falta
@@ -179,6 +188,7 @@ class HrMovNomina(models.TransientModel):
                 else:
                     attendances_list, ausencias = self.get_checadas_validas_dia(
                         v.get('check_list'), v.get('day'), v.get('employee'), horario_rst)
+                    
 
                 for aus in ausencias:
                     self.crear_ausencia_retardo(v.get('employee'), v.get('nombre'), v.get('day'),
@@ -431,13 +441,14 @@ class HrMovNomina(models.TransientModel):
             'holiday_type': 'employee',
             'date_from': date_from,
             'date_to': date_to,
-            'number_of_days_temp': 1 if tipo_ausencia == 'falta' else 0,
+            'number_of_days_display': 1 if tipo_ausencia == 'falta' else 0,
             'holiday_status_id': holiday_status_id,
         }
 
         try:
             uno = datetime.datetime.now()
             res = holiday_obj.create(data_ausencia)
+            
             dos = datetime.datetime.now()
             d = dos - uno
             # _logger.info('******** Tiempo creando {}'.format(d.seconds + d.microseconds / 1000000.0))
@@ -446,7 +457,7 @@ class HrMovNomina(models.TransientModel):
             # _logger.info('******** Tiempo aprobando {}'.format(d.seconds + d.microseconds / 1000000.0))
             self.resultado_txt += mensaje + '\n'
             _logger.info(mensaje)
-        except Exception as e:
+        except Exception as e:            
             self.resultado_txt += mensaje + ' ** NO creada' + '\n'
             _logger.info('{} ** NO creada, {}'.format(mensaje, str(e)))
             res = False
