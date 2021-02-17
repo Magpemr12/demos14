@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="hr_payroll.ir_rule_hr_payslip_multi_company" model="ir.rule">
+        <field name="name">HR Payslip: Multi Company</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="ir_rule_payroll_admin_payslip_multi_company" model="ir.rule">
+        <field name="name">HR Payslip: Multi Company for Payroll Admin</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]</field>
+    </record>
+
+    <record id="hr_payroll.ir_rule_hr_payslip_line_multi_company" model="ir.rule">
+        <field name="name">HR Payslip Line: Multi Company</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip_line"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+    </record>
+
+    <record id="ir_rule_hr_payslip_line_multi_company_for_manager" model="ir.rule">
+        <field name="name">HR Payslip Line: Multi Company For Manager</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip_line"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
+    </record>
+
+    <record id="hr_work_entry_contract.ir_rule_hr_work_entry_multi_company" model="ir.rule">
+        <field name="name">HR Work Entry Contract: Multi Company</field>
+        <field name="model_id" ref="hr_work_entry_contract.model_hr_work_entry"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user')),
+        (4, ref('hr.group_hr_user')), (4, ref('hr_attendance.group_hr_attendance_kiosk'))]"/>
+    </record>
+
+     <record id="ir_rule_hr_work_entry_multi_company_for_managers" model="ir.rule">
+        <field name="name">HR Work Entry Contract: Multi Company for Managers</field>
+        <field name="model_id" ref="hr_work_entry_contract.model_hr_work_entry"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager')),
+        (4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+    <record id="hr_contract.ir_rule_hr_contract_multi_company" model="ir.rule">
+        <field name="name">HR Contract: Multi Company</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user')),
+        (4, ref('hr.group_hr_user')), (4, ref('hr_attendance.group_hr_attendance_kiosk'))]"/>
+    </record>
+
+    <record id="ir_rule_hr_payroll_admin_contract_multi_company" model="ir.rule">
+        <field name="name">HR Contract: Multi Company for Managers</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager')),
+        (4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+    <record id="hr.hr_employee_comp_rule" model="ir.rule">
+        <field name="name">Employee multi company rule</field>
+        <field name="model_id" ref="hr.model_hr_employee"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user')),
+        (4, ref('hr.group_hr_user')), (4, ref('hr_attendance.group_hr_attendance_kiosk'))]"/>
+    </record>
+
+    <record id="hr_employee_payroll_user_comp_rule" model="ir.rule">
+        <field name="name">Employee multi company rule for Managers</field>
+        <field name="model_id" ref="hr.model_hr_employee"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', user.company_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager')),
+        (4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+    <record id="hr.hr_dept_comp_rule" model="ir.rule">
+        <field name="name">Department multi company rule</field>
+        <field name="model_id" ref="hr.model_hr_department"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user')),
+        (4, ref('hr.group_hr_user')), (4, ref('hr_attendance.group_hr_attendance_kiosk'))]"/>
+    </record>
+
+    <record id="hr_depart_payroll_user_comp_rule" model="ir.rule">
+        <field name="name">Department multi company rule for Managers</field>
+        <field name="model_id" ref="hr.model_hr_department"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', user.company_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager')),
+        (4, ref('hr.group_hr_manager'))]"/>
+    </record>
+
+</odoo>

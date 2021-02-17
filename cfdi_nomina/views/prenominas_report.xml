@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- css -->
+    <template id="report_styles" inherit_id="web.report_assets_common">
+        <xpath expr=".">
+            <link rel="stylesheet"
+                  type="text/css"
+                  href="/cfdi_nomina/static/src/css/report.css"
+            />
+        </xpath>
+    </template>
+
+    <!-- Templates -->
+    <template id="reporte_prenominas">
+        <t t-call="web.html_container">
+            <t t-call="cfdi_nomina.contract_external_layout">
+                <!--<t t-call="web.external_layout">-->
+                <t t-foreach="docs" t-as="o">
+                    <div class="page">
+                        <div class="row">
+                            <div class="col-12">
+                                <span t-esc="res_company.name"/>
+                                <span t-esc="res_company.city"/>
+                                <span t-esc="res_company.state_id.name"/>
+                                <span t-esc="res_company.country_id.name"/>
+                                <br/>
+                                <span>
+                                    <b>R.F.C.</b>
+                                </span>
+                                <span t-esc="res_company.vat"/>
+                            </div>
+                        </div>
+                        <div class="row head-blue-med">
+                            <div class="col-12">
+                                <span t-esc="data.get('name')"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <span>
+                                    <b>Periodo del Pago:</b>
+                                </span>
+                                <span t-esc="data.get('date_start')"/>
+                                <span t-esc="data.get('date_end')"/>
+                                <br/>
+                                <span>
+                                    <b>Departamentos:</b>
+                                </span>
+                                <t t-if="'departamentos' in data">
+                                    <span t-esc="data['departamentos']"/>
+                                </t>
+                                <br/>
+                                <span>
+                                    <b>Compañías[Registro Patronal]:</b>
+                                </span>
+                                <t t-if="'companies' in data">
+                                    <span style="font-size:10px" t-esc="data['companies']"/>
+                                </t>
+                            </div>
+
+                        </div>
+                        <div class="row space"/>
+                        <!--Encabezado Datos-->
+
+
+                        <t t-set="t_efectivo" t-value="0"/>
+                        <t t-set="t_neto" t-value="0"/>
+                        <t t-set="t_isr" t-value="0"/>
+                        <t t-set="t_subsidio" t-value="0"/>
+                        <t t-set="t_especie" t-value="0"/>
+                        <t t-set="t_gravable" t-value="0"/>
+                        <t t-set="total_lines_p_list" t-value="[]"/>
+                        <t t-set="total_lines_o_list" t-value="[]"/>
+                        <t t-set="total_lines_d_list" t-value="[]"/>
+                        <t t-set="totales_list" t-value="[]"/>
+
+                        <table width="100%">
+                            <tr>
+                                <td width="12%" style="border-top: solid 1px #034e7f;border-left:  solid 1px #034e7f">
+                                    <strong>Clave</strong>
+                                </td>
+                                <td width="17%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Nombre Trabajador</strong>
+                                </td>
+                                <td width="18%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Dias trabajados</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>F.Pago</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Sueldo</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Otras percep.</strong>
+                                </td>
+                                <td width="10%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Total perc.</strong>
+                                </td>
+                                <td width="18%" style="border-top: solid 1px #034e7f;">
+                                    <strong>Neto pag.</strong>
+                                </td>
+                                <td style="border-top: solid 1px #034e7f;border-right:  solid 1px #034e7f">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border-left: solid 1px #034e7f;">
+                                    <strong>Total en especie</strong>
+                                </td>
+                                <td>
+                                    <strong>Salario por hora</strong>
+                                </td>
+                                <td>
+                                    <strong>Total IMSS</strong>
+                                </td>
+                                <td>
+                                    <strong>Hrs x dia</strong>
+                                </td>
+                                <td>
+                                    <strong>Total ISR</strong>
+                                </td>
+                                <td>
+                                    <strong>Subs.Empl.</strong>
+                                </td>
+                                <td>
+                                    <strong>Otras ded.</strong>
+                                </td>
+                                <td>
+                                    <strong>Total ded.</strong>
+                                </td>
+                                <td style="border-right: solid 1px #034e7f;">
+                                    <strong>T.Efectivo</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border-left: solid 1px #034e7f;border-bottom: solid 1px #034e7f;">
+                                    <strong>N.S.S.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>RFC</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>CURP</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Sal.Diario</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>S.D.I.</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>D.Jornada</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Fecha Alta</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;">
+                                    <strong>Tip.salario</strong>
+                                </td>
+                                <td style="border-bottom: solid 1px #034e7f;border-right: solid 1px #034e7f;">
+                                    <strong>U.T.Laborales</strong>
+                                </td>
+                            </tr>
+                        </table>
+                        <!--Datos-->
+                        <t t-foreach="data['payslips']" t-as="p">
+                            <t t-set="val" t-value="calc_reglas_lines(p)"/>
+                            <t t-set="total_lines_p_list" t-value="total_lines_p_list + [val.get('total_lines_p')]"/>
+                            <t t-set="total_lines_o_list" t-value="total_lines_o_list + [val.get('total_lines_o')]"/>
+                            <t t-set="total_lines_d_list" t-value="total_lines_d_list + [val.get('total_lines_d')]"/>
+                            <t t-set="totales_list" t-value="totales_list + [val.get('totales')]"/>
+                            <t t-set="t_efectivo" t-value="val.get('t_efectivo')"/>
+                            <t t-set="t_neto" t-value="val.get('t_neto')"/>
+                            <t t-set="t_gravable" t-value="val.get('t_gravable')"/>
+                            <t t-set="t_subsidio" t-value="val.get('t_subsidio')"/>
+                            <t t-set="t_especie" t-value="val.get('t_especie')"/>
+                            <table width="100%">
+                                <tr>
+                                    <td width="12%">
+                                        <span t-field="p.employee_id.cod_emp"/>
+                                    </td>
+                                    <td width="17%">
+                                        <span t-field="p.employee_id"/>
+                                    </td>
+                                    <td width="18%">
+                                        <span t-esc="val.get('dias_trabajados')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td width="10%">
+                                        <span t-esc="p.employee_id.tipo_cuenta"/>
+                                    </td>
+                                    <td width="10%">
+                                        <span t-esc="val.get('total_sueldo')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td width="10%">
+                                        <span t-esc="val.get('otras_p')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td width="10%">
+                                        <span t-esc="val.get('total_p')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td width="18%">
+                                        <span t-esc="val.get('total_p') + val.get('total_o') - val.get('total_d')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span t-esc="val.get('total_especie')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_sueldo')/val.get('horas_trabajados') if val.get('horas_trabajados') else 0"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_imss')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('horas_trabajados')/val.get('dias_trabajados') if val.get('dias_trabajados') else 0"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_isr')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_subsidio_empleo')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('otras_d')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_d')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="val.get('total_p') + val.get('total_o') - val.get('total_especie') - val.get('total_d')"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span t-field="p.employee_id.imss"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.rfc"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.curp"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.sueldo_diario"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.sdi" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.tipo_jornada"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.fecha_alta"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="p.employee_id.tipo_sueldo"/>
+                                    </td>
+                                    <td>
+                                        <span>Día</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="row head-blue-med tb_nomina">
+                                <div class="col-6">
+                                    <span>PERCEPCIONES</span>
+                                </div>
+                                <div class="col-6">
+                                    <span>DEDUCCIONES</span>
+                                </div>
+                            </div>
+                            <div class="row tb_nomina">
+                                <div class="col-6">
+                                    <table class="table table-condensed">
+                                        <tbody>
+                                            <t t-set="total" t-value="0"/>
+                                            <tr t-foreach="val.get('lines_p')" t-as="line">
+                                                <td>
+                                                    <span t-esc="line.get('code')"/>
+                                                </td>
+                                                <td>
+                                                    <span t-esc="line.get('name')"/>
+                                                </td>
+                                                <td>
+                                                    <span style="text-align: right;"
+                                                          t-esc="line.get('total')"
+                                                          t-options='{"widget": "float", "precision": 2}'/>
+                                                    <t t-set="total" t-value="total + line.get('total')"/>
+                                                </td>
+                                            </tr>
+
+                                            <t t-if="val.get('total_o')">
+                                                <tr>
+                                                    <th colspan="3">OTROS</th>
+                                                </tr>
+
+                                                <tr t-foreach="val.get('lines_o')" t-as="line">
+                                                    <td>
+                                                        <span t-esc="line.get('code')"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="line.get('name')"/>
+                                                    </td>
+                                                    <td>
+                                                        <span style="text-align: right;"
+                                                              t-esc="line.get('total')"
+                                                              t-esc-options='{"widget": "float", "precision": 2}'/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+
+                                            <tfooter>
+                                                <tr>
+                                                    <td colspan="2">
+                                                        <strong>Total percepciones:</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="text-align: right;"
+                                                                t-esc="total"
+                                                                t-options='{"widget": "float", "precision": 2}'/>
+                                                    </td>
+                                                </tr>
+                                                <tr t-if="val.get('total_o')">
+                                                    <td colspan="2">
+                                                        <strong>Total otros pagos:</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="text-align: right;"
+                                                                t-esc="val.get('total_o')"
+                                                                t-options='{"widget": "float", "precision": 2}'/>
+                                                    </td>
+                                                </tr>
+
+                                            </tfooter>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-6">
+                                    <table class="table table-condensed">
+                                        <tbody>
+                                            <t t-set="total" t-value="0"/>
+                                            <tr t-foreach="val.get('lines_d')" t-as="line">
+                                                <td>
+                                                    <span t-esc="line.get('code')"/>
+                                                </td>
+                                                <td>
+                                                    <span t-esc="line.get('name')"/>
+                                                </td>
+                                                <td>
+                                                    <span style="text-align: right;"
+                                                          t-esc="line.get('total')"
+                                                          t-options='{"widget": "float", "precision": 2}'/>
+                                                    <t t-set="total" t-value="total + line.get('total')"/>
+                                                </td>
+                                            </tr>
+                                            <tfooter>
+                                                <td colspan="2">
+                                                    <strong>Total deducciones:</strong>
+                                                </td>
+                                                <td>
+                                                    <strong style="text-align: right;"
+                                                            t-esc="total"
+                                                            t-options='{"widget": "float", "precision": 2}'/>
+                                                </td>
+                                            </tfooter>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row space_line"/>
+                            <br/>
+                            <br/>
+                        </t>
+
+
+                    </div>
+
+                    <!-- Report footer content -->
+                    <div class="row space"/>
+                    <div class="row head-blue-med">
+                        <div class="col-12">
+                            <span>RESUMEN</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            Total de registros:
+                            <t t-esc="len(data['payslips'])"/>
+                        </div>
+                        <div class="col-2"/>
+                        <div class="col-2"/>
+                        <div class="col-3"/>
+                        <div class="col-2"/>
+                    </div>
+
+                    <div class="row head-blue-med tb_nomina">
+                        <div class="col-6">
+                            <span>PERCEPCIONES</span>
+                        </div>
+                        <div class="col-6">
+                            <span>DEDUCCIONES</span>
+                        </div>
+                    </div>
+                    <div class="row tb_nomina">
+                        <div class="col-6">
+                            <table class="table table-condensed">
+                                <tbody>
+                                    <t t-set="total" t-value="0"/>
+                                    <t t-set="totalo" t-value="0"/>
+                                    <tr t-foreach="get_totales_percepciones(total_lines_p_list)" t-as="line">
+                                        <td>
+                                            <span t-esc="line.get('code')"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.get('name')"/>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="line.get('total')"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                            <t t-set="total" t-value="total + line.get('total')"/>
+                                        </td>
+                                    </tr>
+
+                                    <t t-if="get_totales_otros(total_lines_o_list)">
+
+                                        <tr>
+                                            <th colspan="3">OTROS</th>
+                                        </tr>
+
+                                        <tr t-foreach="get_totales_otros(total_lines_o_list)" t-as="line">
+                                            <td>
+                                                <span t-esc="line.get('code')"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="line.get('name')"/>
+                                            </td>
+                                            <td>
+                                                <span style="text-align: right;"
+                                                      t-esc="line.get('total')"
+                                                      t-esc-options='{"widget": "float", "precision": 2}'/>
+                                                <t t-set="totalo" t-value="totalo + line.get('total')"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tfooter>
+                                        <tr>
+                                            <td colspan="2">
+                                                <strong>Total percepciones:</strong>
+                                            </td>
+                                            <td>
+                                                <strong style="text-align: right;"
+                                                        t-esc="total"
+                                                        t-options='{"widget": "float", "precision": 2}'/>
+                                            </td>
+                                        </tr>
+                                        <tr t-if="totalo">
+                                            <td colspan="2">
+                                                <strong>Total otros pagos:</strong>
+                                            </td>
+                                            <td>
+                                                <strong style="text-align: right;"
+                                                        t-esc="totalo"
+                                                        t-options='{"widget": "float", "precision": 2}'/>
+                                            </td>
+                                        </tr>
+                                    </tfooter>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-6">
+                            <table class="table table-condensed">
+                                <tbody>
+                                    <t t-set="total" t-value="0"/>
+                                    <tr t-foreach="get_totales_deducciones(total_lines_d_list)" t-as="line">
+                                        <td>
+                                            <span t-esc="line.get('code')"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.get('name')"/>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="line.get('total')"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                            <t t-set="total" t-value="total + line.get('total')"/>
+                                        </td>
+                                    </tr>
+                                    <tfooter>
+                                        <td colspan="2">
+                                            <strong>Total deducciones:</strong>
+                                        </td>
+                                        <td>
+                                            <strong style="text-align: right;"
+                                                    t-esc="total"
+                                                    t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tfooter>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                    <div class="row head-blue-med tb_nomina">
+                        <strong>Totales</strong>
+                    </div>
+                    <!--                    <t t-set="val" t-value="get_total(o)"/>-->
+                    <div class="row tb_nomina">
+                        <div class="col-offset-3 col-6">
+                            <table class="table table-condensed">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <strong>TOTAL EFECTIVO:</strong>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="t_efectivo"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>NETO PAGADO:</strong>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="t_neto"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Total Base Gravable:</strong>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="t_gravable"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Total Subsidio para el empleo:</strong>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="t_subsidio"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Total en especie:</strong>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="t_especie"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+                                    <tr t-foreach="get_totales(totales_list)" t-as="total">
+                                        <td>
+                                            <strong>Total FDP :</strong>
+                                            <span t-esc="total.get('fdp')"/>
+                                        </td>
+                                        <td>
+                                            <span style="text-align: right;"
+                                                  t-esc="total.get('t_efectivo')"
+                                                  t-options='{"widget": "float", "precision": 2}'/>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row space_line"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="paperformat_report_prenominas" model="report.paperformat">
+        <field name="name">PreNominas</field>
+        <field name="default" eval="True"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">35</field>
+        <field name="margin_bottom">2</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
+
+    <record id="action_reporte_prenominas" model="ir.actions.report">
+        <field name="name">PreNominas</field>
+        <field name="model">hr.payslip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cfdi_nomina.reporte_prenominas</field>
+        <field name="report_file">cfdi_nomina.reporte_pre_nominas</field>
+        <field name="print_report_name">'PreNominas-%s' % (object.name).replace('/', '')</field>
+        <field name="binding_model_id" ref="model_hr_payslip"/>
+        <field name="paperformat_id" ref="cfdi_nomina.paperformat_report_prenominas"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
