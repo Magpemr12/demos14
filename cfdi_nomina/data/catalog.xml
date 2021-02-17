@@ -117,7 +117,7 @@
     </data>
 
     <!--Tabla Vacaciones-->
-    <data>
+    <data noupdate="1">
         <record id='hr_holiday_id' model='hr.vacation'>
             <field name='name'>Vacaciones 1</field>
         </record>
@@ -179,7 +179,7 @@
     </data>
 
     <!--Tabla Base Gravable-->
-    <data>
+    <data noupdate="1">
         <record id='hr_taxable_base_id1' model='hr.basegravable.acum'>
             <field name='sequence'>1</field>
             <field name='name'>Base Gravable ISR</field>
@@ -208,7 +208,7 @@
     </data>
 
     <!--Tabla Subsidio-->
-    <data>
+    <data noupdate="1">
         <record id='hr_sube_id' model='hr.employment.sube'>
             <field name='name'>2018</field>
         </record>
@@ -292,7 +292,7 @@
     </data>
 
     <!--Tabla ISPT-->
-    <data>
+    <data noupdate="1">
         <record id='hr_ispt_id' model='hr.ispt'>
             <field name='name'>2018</field>
         </record>

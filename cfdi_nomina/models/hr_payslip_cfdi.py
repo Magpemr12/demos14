@@ -13,7 +13,7 @@ from lxml import objectify, etree
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from suds.client import Client
 from jinja2 import Environment, FileSystemLoader
-from odoo import _, api, models, fields
+from odoo import _, api, models, fields, tools
 from odoo.exceptions import UserError
 from odoo.tools.xml_utils import _check_with_xsd
 
@@ -174,7 +174,6 @@ class HrPayslip(models.Model):
         for line in self.worked_days_line_ids:
             if line.code == code:
                 found = True
-                print ("total days",line.number_of_days)
                 dias += line.number_of_days
                 horas += line.number_of_hours
 
@@ -411,7 +410,7 @@ class HrPayslip(models.Model):
         for line in self.line_ids.filtered('salary_rule_id.tipo_id'):
             tipo = tipos[line.salary_rule_id.tipo_id.id]
             goe = line.salary_rule_id.gravado_o_exento or 'gravado'
-            if line.total > 0:
+            if goe != 'ninguno' and line.total > 0:
                 line.write({goe: line.total})
             nodos[tipo].append(line)
             if tipo == 'h':
@@ -784,8 +783,10 @@ class HrPayslip(models.Model):
                 'jinja2.ext.autoescape'], autoescape='True')
             jinja2_xml = env.get_template('nomina12.xml').render(cfdi_data)
             xml = objectify.fromstring(jinja2_xml)
-            cadena = self.env['account.invoice'].l10n_mx_edi_generate_cadena(
-                CFDI_XSLT_CADENA % '3.3', xml)
+            xslt_root = etree.parse(tools.file_open(CFDI_XSLT_CADENA % '3.3'))
+            cadena = str(etree.XSLT(xslt_root)(xml))
+            # cadena = self.env['account.move'].l10n_mx_edi_generate_cadena(
+            #     CFDI_XSLT_CADENA % '3.3', xml)
             certificate_ids = rec.company_id.l10n_mx_edi_certificate_ids
             if not certificate_ids:
                 raise UserError(
@@ -928,7 +929,7 @@ class HrPayslip(models.Model):
         attach_obj = self.env['ir.attachment']
         rec = self
         fname = "CFDI_Nomina_{}.pdf".format(rec.number).replace('/', '')
-        pdf = attach_obj.search([('datas_fname', '=', fname),
+        pdf = attach_obj.search([('name', '=', fname),
                                  ('res_id', '=', rec.id),
                                  ('res_model', '=', self._name)], limit=1)
         if pdf:
@@ -940,7 +941,7 @@ class HrPayslip(models.Model):
         attachment_values = {
             'name': fname,
             'datas': data,
-            'datas_fname': fname,
+            # 'datas': fname,
             'description': 'Comprobante Fiscal Digital (PDF) ' + rec.name,
             'res_model': self._name,
             'res_id': rec.id,
@@ -1090,7 +1091,7 @@ class HrPayslip(models.Model):
 
     @api.model
     def _l10n_mx_edi_advans_info(self, company_id, service_type):
-        return self.env['account.invoice']._l10n_mx_edi_advans_info(company_id, service_type)
+        return self.env['account.move']._l10n_mx_edi_advans_info(company_id, service_type)
 
     def _l10n_mx_edi_advans_sign(self, pac_info):
         '''SIGN for Advans.
@@ -1205,7 +1206,7 @@ class HrPayslip(models.Model):
                 self.env["ir.attachment"].create({
                     'name': fname,
                     'datas': xml,
-                    'datas_fname': fname,
+                    # 'datas_fname': fname,
                     'description': 'Comprobante Fiscal Digital ' + rec.name,
                     'res_model': rec._name,
                     'res_id': rec.id,
@@ -1257,7 +1258,7 @@ class HrPayslip(models.Model):
             multi = pac_info.pop('multi', False)
             if multi:
                 # rebuild the recordset
-                records = self.env['account.invoice'].search(
+                records = self.env['account.move'].search(
                     [('id', 'in', self.ids), ('company_id', '=', company_id.id)])
                 getattr(records, service_func)(pac_info)
             else:
@@ -1295,7 +1296,7 @@ class HrPayslip(models.Model):
             post_msg.extend([_('Message: ') + msg])
         self.message_post(
             body=body_msg + create_list_html(post_msg),
-            subtype='account.mt_invoice_validated')
+            subtype_xmlid='account.mt_invoice_validated')
 
     def _l10n_mx_edi_post_cancel_process(self, cancelled, code=None, msg=None):
         '''Post process the results of the cancel service.
