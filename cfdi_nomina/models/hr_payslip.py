@@ -9,6 +9,7 @@ from odoo.addons.hr_payroll.models.browsable_object import BrowsableObject, Inpu
 from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Datetime
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
+from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, models, fields, registry
 
@@ -423,7 +424,7 @@ class HrPayslip(models.Model):
 
     def action_payslip_done(self):
         # Marcar las faltas para no repetir en otro calculo de quincenca
-        res = super().action_payslip_done()
+        res = super(HrPayslip, self).action_payslip_done()
         for payslip in self:
             total = 0
             for line in payslip.worked_days_line_ids:
