@@ -16,6 +16,8 @@ from jinja2 import Environment, FileSystemLoader
 from odoo import _, api, models, fields, tools
 from odoo.exceptions import UserError
 from odoo.tools.xml_utils import _check_with_xsd
+from odoo.exceptions import Warning
+
 
 CATALOGO_TIPONOMINA = [('O', 'Ordinaria'), ('E', 'Extraordinaria')]
 CHECK_CFDI_RE = re.compile(
@@ -392,7 +394,10 @@ class HrPayslip(models.Model):
             # cuenta
             num_cuenta = num_cuenta[len(num_cuenta) - 10:]
             date_to_l = str(self.date_to)
+            if not empleado.fecha_alta:
+                raise Warning(_("Joining date is not configured on employee!"))
             fecha_alta_l = str(empleado.fecha_alta)
+
             fecha_final_pago = datetime.strptime(
                 date_to_l, "%Y-%m-%d").date()
             fecha_alta = datetime.strptime(
