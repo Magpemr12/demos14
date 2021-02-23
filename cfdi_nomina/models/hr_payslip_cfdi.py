@@ -750,7 +750,7 @@ class HrPayslip(models.Model):
             'amount_total': "%.2f" % total,
             'emitter_rfc': company.partner_id.vat or "",
             'emitter_name': emitter_name or "",
-            # 'emitter_fiscal_position': company.partner_id.property_account_position_id.l10n_mx_edi_code,
+            'emitter_fiscal_position': company.l10n_mx_edi_fiscal_regime,
             'receiver_rfc': empleado.rfc or "",
             'receiver_name': empleado.nombre_completo or "",
             'concept_price_unit': "%.2f" % importe,
@@ -892,8 +892,8 @@ class HrPayslip(models.Model):
         for record in records:
             if record.estado_timbrado in ['en_proceso']:
                 record.estado_timbrado = 'cancelado'
-                record.message_post(body=_('The cancel service has been called with success'),
-                                    subtype='account.mt_invoice_validated')
+                record.message_post(body=_('The cancel service has been called with success'))
+                                    # subtype='account.mt_invoice_validated')
             else:
                 record.estado_timbrado = 'a_cancelar'
         records = self.search([
@@ -1240,8 +1240,8 @@ class HrPayslip(models.Model):
 
     def l10n_mx_edi_log_error(self, message):
         self.ensure_one()
-        self.message_post(body=_('Error during the process: %s') % message,
-                          subtype='account.mt_invoice_validated')
+        self.message_post(body=_('Error during the process: %s') % message)
+                          # subtype='account.mt_invoice_validated')
 
     def _l10n_mx_edi_call_service(self, service_type):
         '''Call the right method according to the pac_name, it's info returned by the '_l10n_mx_edi_%s_info' % pac_name'
@@ -1300,8 +1300,8 @@ class HrPayslip(models.Model):
         if msg:
             post_msg.extend([_('Message: ') + msg])
         self.message_post(
-            body=body_msg + create_list_html(post_msg),
-            subtype_xmlid='account.mt_invoice_validated')
+            body=body_msg + create_list_html(post_msg))
+            # subtype_xmlid='account.mt_invoice_validated')
 
     def _l10n_mx_edi_post_cancel_process(self, cancelled, code=None, msg=None):
         '''Post process the results of the cancel service.
@@ -1323,8 +1323,8 @@ class HrPayslip(models.Model):
         if msg:
             post_msg.extend([_('Message: ') + msg])
         self.message_post(
-            body=body_msg + create_list_html(post_msg),
-            subtype='account.mt_invoice_validated')
+            body=body_msg + create_list_html(post_msg))
+            # subtype='account.mt_invoice_validated')
 
     @api.model
     def l10n_mx_edi_get_xml_etree(self, cfdi=None):

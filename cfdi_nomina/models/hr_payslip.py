@@ -424,7 +424,7 @@ class HrPayslip(models.Model):
 
     def action_payslip_done(self):
         # Marcar las faltas para no repetir en otro calculo de quincenca
-        res = super(HrPayslip, self).action_payslip_done()
+        res = super().action_payslip_done()
         for payslip in self:
             total = 0
             for line in payslip.worked_days_line_ids:
