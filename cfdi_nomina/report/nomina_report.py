@@ -204,17 +204,29 @@ class PaySlipReport(models.AbstractModel):
                     comprobante = dict(
                         {payslip.id: dict(xmltodict.parse(base64.decodebytes(atta.datas)).get('cfdi:Comprobante', {}))})
                     break
-            timbre_cfd = timbre[payslip.id].get('SelloCFD', '')
-            timbre_sat = timbre[payslip.id].get('SelloSAT', '')
-            com_total = comprobante[payslip.id].get('@{}'.format('Total'), 0)
-            com_forma_pago = comprobante[payslip.id].get('@{}'.format('FormaPago'))
-            com_fecha = comprobante[payslip.id].get('@{}'.format('Fecha'))
-            com_no_certi = comprobante[payslip.id].get('@{}'.format('NoCertificado'))
-            com_serie = comprobante[payslip.id].get('@{}'.format('Serie'))
-            com_folio = comprobante[payslip.id].get('@{}'.format('Folio'))
-            nomina = comprobante[payslip.id].get('cfdi:Complemento', {}).get('nomina12:Nomina', {})
-            nomina_p = nomina.get('@{}'.format('TotalPercepciones'), 0)
-            nomina_o = nomina.get('@{}'.format('TotalOtrosPagos'), 0)
+            timbre_cfd = ''
+            timbre_sat = ''
+            if payslip.id in timbre and timbre.get(payslip.id):
+                timbre_cfd = timbre[payslip.id].get('SelloCFD', '')
+                timbre_sat = timbre[payslip.id].get('SelloSAT', '')
+            com_total = 0
+            com_forma_pago = ''
+            com_fecha = ''
+            com_no_certi = ''
+            com_serie = ''
+            com_folio = ''
+            nomina_p = 0
+            nomina_o = 0
+            if payslip.id in comprobante:
+                com_total = comprobante[payslip.id].get('@{}'.format('Total'), 0)
+                com_forma_pago = comprobante[payslip.id].get('@{}'.format('FormaPago'))
+                com_fecha = comprobante[payslip.id].get('@{}'.format('Fecha'))
+                com_no_certi = comprobante[payslip.id].get('@{}'.format('NoCertificado'))
+                com_serie = comprobante[payslip.id].get('@{}'.format('Serie'))
+                com_folio = comprobante[payslip.id].get('@{}'.format('Folio'))
+                nomina = comprobante[payslip.id].get('cfdi:Complemento', {}).get('nomina12:Nomina', {})
+                nomina_p = nomina.get('@{}'.format('TotalPercepciones'), 0)
+                nomina_o = nomina.get('@{}'.format('TotalOtrosPagos'), 0)
 
             for line in payslip.line_ids:
                 if not line.appears_on_payslip or not line.total:
